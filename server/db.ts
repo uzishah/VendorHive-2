@@ -1,8 +1,8 @@
 import { MongoClient, ServerApiVersion } from 'mongodb';
 import mongoose from 'mongoose';
 
-// MongoDB connection URI (Make sure this is set in your environment)
-const MONGODB_URI = 'mongodb+srv://atlas-sample-dataset-load-67fa6ae1a939f22be87462f3:syed2285800@cluster0.y0e2txe.mongodb.net/vendorhive';
+// MongoDB connection URI (from environment variable)
+const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
   throw new Error('Please define the MONGODB_URI environment variable');

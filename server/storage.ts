@@ -694,5 +694,13 @@ export class MongoDBStorage implements IStorage {
   }
 }
 
-// Use MongoDB Storage instead of MemStorage
-export const storage = new MongoDBStorage();
+// Helper to track if MongoDB connection was successful
+let isMongoConnected = false;
+
+// Export this function so it can be called from index.ts
+export const setMongoConnectionStatus = (status: boolean) => {
+  isMongoConnected = status;
+};
+
+// Conditionally use MongoDB Storage or MemStorage based on connection status
+export const storage = isMongoConnected ? new MongoDBStorage() : new MemStorage();
