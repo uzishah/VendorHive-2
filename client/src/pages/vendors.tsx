@@ -1,26 +1,73 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import MainLayout from '@/layouts/main-layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import StarRating from '@/components/ui/star-rating';
 import { getVendors } from '@/services/api';
-import { Search } from 'lucide-react';
+import { Search, Filter, Star } from 'lucide-react';
+
+// Common categories for vendors
+const CATEGORIES = [
+  'Home Services',
+  'Professional Services', 
+  'Beauty & Wellness',
+  'Events',
+  'Education',
+  'Health',
+  'Technology',
+  'Food & Catering',
+  'Fitness',
+  'Transportation',
+  'Other'
+];
 
 const VendorsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSearch, setActiveSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [minRating, setMinRating] = useState<number>(0);
+  const [showFilters, setShowFilters] = useState(false);
   
   const { data: vendors, isLoading, refetch } = useQuery({
     queryKey: ['/api/vendors', activeSearch],
     queryFn: () => getVendors(activeSearch)
   });
   
+  // Apply filters to the vendors data
+  const filteredVendors = vendors ? vendors.filter(vendor => {
+    // Filter by category if selected
+    if (selectedCategory && vendor.category !== selectedCategory) {
+      return false;
+    }
+    
+    // Filter by minimum rating
+    if (minRating > 0 && vendor.rating < minRating) {
+      return false;
+    }
+    
+    return true;
+  }) : [];
+
+  // Effect to refetch when filters change
+  useEffect(() => {
+    refetch();
+  }, [refetch, selectedCategory, minRating]);
+  
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setActiveSearch(searchQuery);
+  };
+  
+  const resetFilters = () => {
+    setSelectedCategory('');
+    setMinRating(0);
   };
   
   return (
@@ -51,9 +98,95 @@ const VendorsPage: React.FC = () => {
               Search
             </Button>
           </form>
+          
+          {/* Filter section */}
+          <div className="mt-8 max-w-4xl mx-auto">
+            <div className="flex items-center justify-between mb-4">
+              <Button 
+                variant="ghost" 
+                className="flex items-center text-gray-600" 
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                {showFilters ? 'Hide Filters' : 'Show Filters'}
+              </Button>
+              
+              {(selectedCategory || minRating > 0) && (
+                <Button 
+                  variant="ghost" 
+                  className="text-gray-600" 
+                  onClick={resetFilters}
+                >
+                  Reset Filters
+                </Button>
+              )}
+            </div>
+            
+            {showFilters && (
+              <Card className="mb-6">
+                <CardContent className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label htmlFor="category-filter" className="mb-2 block">Category</Label>
+                      <Select
+                        value={selectedCategory}
+                        onValueChange={setSelectedCategory}
+                      >
+                        <SelectTrigger id="category-filter" className="w-full">
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">All Categories</SelectItem>
+                          {CATEGORIES.map(category => (
+                            <SelectItem key={category} value={category}>{category}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label className="mb-2 block">Minimum Rating</Label>
+                      <div className="flex items-center space-x-4">
+                        {[0, 1, 2, 3, 4, 5].map(rating => (
+                          <div key={rating} className="flex items-center">
+                            <input 
+                              type="radio" 
+                              id={`rating-${rating}`}
+                              name="min-rating"
+                              value={rating}
+                              checked={minRating === rating}
+                              onChange={() => setMinRating(rating)}
+                              className="sr-only"
+                            />
+                            <label 
+                              htmlFor={`rating-${rating}`}
+                              className={`flex items-center cursor-pointer rounded-md px-2 py-1 ${
+                                minRating === rating 
+                                  ? 'bg-primary text-white' 
+                                  : 'bg-gray-100 text-gray-700'
+                              }`}
+                            >
+                              {rating === 0 ? (
+                                <span>Any</span>
+                              ) : (
+                                <div className="flex items-center">
+                                  <span>{rating}+</span>
+                                  <Star className="h-3 w-3 ml-1" />
+                                </div>
+                              )}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
         
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-12">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-8">
           {isLoading ? (
             // Show loading skeletons
             Array(6).fill(0).map((_, index) => (
@@ -78,8 +211,8 @@ const VendorsPage: React.FC = () => {
                 </CardContent>
               </Card>
             ))
-          ) : vendors && vendors.length > 0 ? (
-            vendors.map((vendor) => (
+          ) : vendors && filteredVendors.length > 0 ? (
+            filteredVendors.map((vendor) => (
               <Card key={vendor.id} className="bg-white overflow-hidden shadow rounded-lg">
                 <div className="h-48 w-full overflow-hidden">
                   <img 
@@ -125,7 +258,9 @@ const VendorsPage: React.FC = () => {
           ) : (
             <div className="col-span-full text-center py-12">
               <p className="text-gray-500 text-lg">
-                No vendors found. Try a different search term.
+                {activeSearch ? 
+                  "No vendors found for your search term." : 
+                  "No vendors match the selected filters."}
               </p>
               <Button 
                 variant="outline" 
@@ -133,9 +268,10 @@ const VendorsPage: React.FC = () => {
                 onClick={() => {
                   setSearchQuery('');
                   setActiveSearch('');
+                  resetFilters();
                 }}
               >
-                Clear Search
+                Clear All Filters & Search
               </Button>
             </div>
           )}
