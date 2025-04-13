@@ -9,6 +9,7 @@ import VendorsPage from "@/pages/vendors";
 import VendorProfilePage from "@/pages/vendor-profile";
 import UserProfilePage from "@/pages/user-profile";
 import DashboardPage from "@/pages/dashboard";
+import VendorServicesPage from "@/pages/vendor-services";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/vendors/:id" component={VendorProfilePage} />
       <Route path="/profile" component={UserProfilePage} />
       <Route path="/dashboard" component={DashboardPage} />
+      <Route path="/services" component={VendorServicesPage} />
       <Route component={NotFound} />
     </Switch>
   );
