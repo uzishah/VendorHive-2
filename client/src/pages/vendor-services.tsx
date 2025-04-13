@@ -591,8 +591,9 @@ export default function VendorServicesPage() {
   // Delete service mutation
   const deleteServiceMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest(`/api/services/${id}`, {
+      const response = await fetch(`/api/services/${id}`, {
         method: 'DELETE',
+        credentials: 'include'
       });
       
       if (!response.ok) {

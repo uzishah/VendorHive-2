@@ -6,7 +6,6 @@ export interface Vendor {
   businessName: string;
   category: string;
   description: string;
-  services?: string[];
   businessHours?: Record<string, any>;
   rating: number;
   reviewCount: number;
@@ -23,10 +22,16 @@ export interface Service {
   id: number;
   vendorId: number;
   name: string;
+  category: string;
   description: string;
   price: string;
   duration?: string;
+  location?: string;
+  imageUrl?: string;
+  timeSlots?: { day: string; startTime: string; endTime: string }[];
+  availableDates?: Date[];
   availability: boolean;
+  createdAt?: Date;
 }
 
 export interface Booking {
@@ -67,7 +72,6 @@ export const getVendorById = async (id: number): Promise<{
   businessName: string;
   category: string;
   description: string;
-  services?: string[];
   businessHours?: Record<string, any>;
   rating: number;
   reviewCount: number;
@@ -78,7 +82,7 @@ export const getVendorById = async (id: number): Promise<{
     username: string;
     profileImage?: string;
   };
-  services: Service[];
+  serviceList: Service[];
   reviews: Review[];
 }> => {
   const response = await apiRequest('GET', `/api/vendors/${id}`);
@@ -87,13 +91,50 @@ export const getVendorById = async (id: number): Promise<{
 
 // Service APIs
 export const getVendorServices = async (vendorId: number): Promise<Service[]> => {
-  const response = await apiRequest('GET', `/api/vendors/${vendorId}/services`);
+  const response = await fetch(`/api/vendors/${vendorId}/services`, {
+    credentials: 'include'
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch vendor services');
+  }
   return response.json();
 };
 
 export const createService = async (serviceData: Omit<Service, 'id'>): Promise<Service> => {
-  const response = await apiRequest('POST', '/api/services', serviceData);
+  const response = await fetch('/api/services', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(serviceData)
+  });
+  if (!response.ok) {
+    throw new Error('Failed to create service');
+  }
   return response.json();
+};
+
+export const updateService = async (id: number, serviceData: Partial<Service>): Promise<Service> => {
+  const response = await fetch(`/api/services/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(serviceData)
+  });
+  if (!response.ok) {
+    throw new Error('Failed to update service');
+  }
+  return response.json();
+};
+
+export const deleteService = async (id: number): Promise<boolean> => {
+  const response = await fetch(`/api/services/${id}`, {
+    method: 'DELETE',
+    credentials: 'include'
+  });
+  if (!response.ok) {
+    throw new Error('Failed to delete service');
+  }
+  return true;
 };
 
 // Booking APIs
