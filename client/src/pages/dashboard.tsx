@@ -328,6 +328,67 @@ const DashboardPage: React.FC = () => {
           </Card>
         </div>
         
+        {/* Quick Action Panel and Analytics */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Quick Actions */}
+          <Card className="lg:col-span-1">
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+              <CardDescription>Access frequently used features</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button onClick={() => setIsAddServiceModalOpen(true)} className="w-full justify-start">
+                <PlusCircle className="mr-2 h-5 w-5" />
+                Add New Service
+              </Button>
+              
+              <Button variant="outline" className="w-full justify-start" asChild>
+                <a href="/bookings">
+                  <Calendar className="mr-2 h-5 w-5" />
+                  View All Bookings
+                </a>
+              </Button>
+              
+              <Button variant="outline" className="w-full justify-start" onClick={() => setIsEditProfileModalOpen(true)}>
+                <Settings className="mr-2 h-5 w-5" />
+                Update Business Profile
+              </Button>
+              
+              <Button variant="outline" className="w-full justify-start" asChild>
+                <a href={`/vendors/${vendorId}`} target="_blank" rel="noopener noreferrer">
+                  <Users className="mr-2 h-5 w-5" />
+                  View Public Profile
+                </a>
+              </Button>
+            </CardContent>
+          </Card>
+          
+          {/* Analytics Chart */}
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>Performance Overview</CardTitle>
+              <CardDescription>Bookings and ratings over time</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px] flex flex-col justify-center items-center">
+                {/* In a real app, this would be a chart from Recharts */}
+                <div className="text-center">
+                  <div className="flex justify-center items-end h-[200px] space-x-2 mb-4">
+                    {[0.3, 0.5, 0.7, 0.4, 0.9, 0.6, 0.8].map((height, i) => (
+                      <div 
+                        key={i} 
+                        className="w-8 bg-gradient-to-t from-primary/50 to-primary rounded-t-md"
+                        style={{height: `${height * 100}%`}}
+                      ></div>
+                    ))}
+                  </div>
+                  <p className="text-sm text-gray-500">Last 7 days activity</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
         {/* Main content tabs */}
         <Tabs defaultValue="bookings">
           <TabsList className="mb-6">

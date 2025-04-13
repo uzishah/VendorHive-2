@@ -21,7 +21,7 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', withText = true }) => {
   
   return (
     <Link href="/">
-      <a className="flex items-center cursor-pointer">
+      <div className="flex items-center cursor-pointer">
         <svg className={`${sizeMap[size]} text-primary`} viewBox="0 0 24 24" fill="currentColor">
           <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5zm2 4h2v2H7v-2zm4 0h2v2h-2v-2zm4 0h2v2h-2v-2zm-8 4h2v2H7v-2zm4 0h2v2h-2v-2z"/>
         </svg>
@@ -30,7 +30,7 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', withText = true }) => {
             VENDORHIVE
           </span>
         )}
-      </a>
+      </div>
     </Link>
   );
 };
