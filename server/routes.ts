@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { hashPassword, comparePassword, generateToken } from "./auth";
 import { authenticateToken, authorizeRole, authorizeVendor } from "./middleware";
+import { upload, uploadImage } from "./cloudinary";
 import { 
   insertUserSchema, 
   insertVendorSchema, 
@@ -255,6 +256,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Upload image route
+  app.post('/api/upload', authenticateToken, upload.single('image'), async (req, res, next) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+      }
+      
+      const imageUrl = await uploadImage(req.file);
+      res.status(201).json({ imageUrl });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   // Service routes
   app.post('/api/services', authenticateToken, authorizeRole(['vendor']), async (req, res, next) => {
     try {
@@ -291,6 +306,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const services = await storage.getServicesByVendorId(vendorId);
       
       res.json(services);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Update service route
+  app.put('/api/services/:id', authenticateToken, authorizeRole(['vendor']), async (req, res, next) => {
+    try {
+      const serviceId = parseInt(req.params.id);
+      
+      if (isNaN(serviceId)) {
+        return res.status(400).json({ message: 'Invalid service ID' });
+      }
+      
+      // Get the service
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: 'Service not found' });
+      }
+      
+      // Get vendor by user ID
+      const vendor = await storage.getVendorByUserId(req.user.id);
+      if (!vendor) {
+        return res.status(404).json({ message: 'Vendor profile not found' });
+      }
+      
+      // Ensure vendor owns the service
+      if (service.vendorId !== vendor.id) {
+        return res.status(403).json({ message: 'You can only update your own services' });
+      }
+      
+      // Update service
+      const updatedService = await storage.updateService(serviceId, req.body);
+      if (!updatedService) {
+        return res.status(404).json({ message: 'Service not found' });
+      }
+      
+      res.json(updatedService);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Delete service route
+  app.delete('/api/services/:id', authenticateToken, authorizeRole(['vendor']), async (req, res, next) => {
+    try {
+      const serviceId = parseInt(req.params.id);
+      
+      if (isNaN(serviceId)) {
+        return res.status(400).json({ message: 'Invalid service ID' });
+      }
+      
+      // Get the service
+      const service = await storage.getServiceById(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: 'Service not found' });
+      }
+      
+      // Get vendor by user ID
+      const vendor = await storage.getVendorByUserId(req.user.id);
+      if (!vendor) {
+        return res.status(404).json({ message: 'Vendor profile not found' });
+      }
+      
+      // Ensure vendor owns the service
+      if (service.vendorId !== vendor.id) {
+        return res.status(403).json({ message: 'You can only delete your own services' });
+      }
+      
+      // Delete service
+      const deleted = await storage.deleteService(serviceId);
+      if (!deleted) {
+        return res.status(404).json({ message: 'Service not found' });
+      }
+      
+      res.status(204).send();
     } catch (error) {
       next(error);
     }

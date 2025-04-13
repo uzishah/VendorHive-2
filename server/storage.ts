@@ -32,7 +32,10 @@ export interface IStorage {
   
   // Service related methods
   createService(service: InsertService): Promise<Service>;
+  getServiceById(id: number): Promise<Service | undefined>;
   getServicesByVendorId(vendorId: number): Promise<Service[]>;
+  updateService(id: number, service: Partial<InsertService>): Promise<Service | undefined>;
+  deleteService(id: number): Promise<boolean>;
   
   // Booking related methods
   createBooking(booking: InsertBooking): Promise<Booking>;
@@ -183,10 +186,27 @@ export class MemStorage implements IStorage {
     return service;
   }
 
+  async getServiceById(id: number): Promise<Service | undefined> {
+    return this.services.get(id);
+  }
+
   async getServicesByVendorId(vendorId: number): Promise<Service[]> {
     return Array.from(this.services.values()).filter(
       (service) => service.vendorId === vendorId
     );
+  }
+
+  async updateService(id: number, serviceData: Partial<InsertService>): Promise<Service | undefined> {
+    const existingService = this.services.get(id);
+    if (!existingService) return undefined;
+    
+    const updatedService = { ...existingService, ...serviceData };
+    this.services.set(id, updatedService);
+    return updatedService;
+  }
+
+  async deleteService(id: number): Promise<boolean> {
+    return this.services.delete(id);
   }
 
   // Booking related methods
@@ -497,6 +517,16 @@ export class MongoDBStorage implements IStorage {
     }
   }
 
+  async getServiceById(id: number): Promise<Service | undefined> {
+    try {
+      const service = await ServiceModel.findOne({ id });
+      return service ? this.mongoServiceToService(service) : undefined;
+    } catch (error) {
+      console.error('Error getting service by ID:', error);
+      return undefined;
+    }
+  }
+
   async getServicesByVendorId(vendorId: number): Promise<Service[]> {
     try {
       const services = await ServiceModel.find({ vendorId });
@@ -504,6 +534,30 @@ export class MongoDBStorage implements IStorage {
     } catch (error) {
       console.error('Error getting services by vendor ID:', error);
       return [];
+    }
+  }
+  
+  async updateService(id: number, serviceData: Partial<InsertService>): Promise<Service | undefined> {
+    try {
+      const updatedService = await ServiceModel.findOneAndUpdate(
+        { id },
+        { $set: serviceData },
+        { new: true }
+      );
+      return updatedService ? this.mongoServiceToService(updatedService) : undefined;
+    } catch (error) {
+      console.error('Error updating service:', error);
+      return undefined;
+    }
+  }
+  
+  async deleteService(id: number): Promise<boolean> {
+    try {
+      const result = await ServiceModel.deleteOne({ id });
+      return result.deletedCount > 0;
+    } catch (error) {
+      console.error('Error deleting service:', error);
+      return false;
     }
   }
 
