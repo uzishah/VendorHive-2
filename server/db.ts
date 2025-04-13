@@ -68,10 +68,20 @@ const vendorSchema = new mongoose.Schema({
 const serviceSchema = new mongoose.Schema({
   vendorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor', required: true },
   name: { type: String, required: true },
+  category: { type: String, required: true },
   description: { type: String, required: true },
   price: { type: String, required: true },
   duration: String,
-  availability: { type: Boolean, default: true }
+  location: String,
+  imageUrl: String,
+  timeSlots: [{ 
+    day: String,
+    startTime: String,
+    endTime: String 
+  }],
+  availableDates: [Date],
+  availability: { type: Boolean, default: true },
+  createdAt: { type: Date, default: Date.now }
 });
 
 const bookingSchema = new mongoose.Schema({

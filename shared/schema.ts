@@ -35,10 +35,16 @@ export const services = pgTable("services", {
   id: serial("id").primaryKey(),
   vendorId: integer("vendor_id").notNull().references(() => vendors.id),
   name: text("name").notNull(),
+  category: text("category").notNull(),
   description: text("description").notNull(),
   price: text("price").notNull(),
   duration: text("duration"),
+  location: text("location"),
+  imageUrl: text("image_url"),
+  timeSlots: jsonb("time_slots"),
+  availableDates: jsonb("available_dates"),
   availability: boolean("availability").default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 // Bookings made by users

@@ -670,10 +670,16 @@ export class MongoDBStorage implements IStorage {
       id: mongoService.id,
       vendorId: mongoService.vendorId,
       name: mongoService.name,
+      category: mongoService.category || '',
       description: mongoService.description,
       price: mongoService.price,
       duration: mongoService.duration || null,
-      availability: mongoService.availability
+      location: mongoService.location || null,
+      imageUrl: mongoService.imageUrl || null,
+      timeSlots: mongoService.timeSlots || [],
+      availableDates: mongoService.availableDates || [],
+      availability: mongoService.availability !== false,
+      createdAt: mongoService.createdAt || new Date()
     };
   }
 
