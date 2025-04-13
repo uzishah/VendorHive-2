@@ -2,7 +2,6 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { connectMongoose } from "./db";
-import { setMongoConnectionStatus } from "./storage";
 
 const app = express();
 app.use(express.json());
@@ -39,17 +38,13 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Try to connect to MongoDB if environment variable is set
-  if (process.env.MONGODB_URI) {
-    try {
-      await connectMongoose();
-      log("Connected to MongoDB successfully");
-    } catch (error) {
-      log(`Warning: Failed to connect to MongoDB: ${error}`);
-      log("Falling back to in-memory storage");
-    }
-  } else {
-    log("No MongoDB URI provided, using in-memory storage");
+  // Connect to MongoDB (required)
+  try {
+    await connectMongoose();
+    log("Connected to MongoDB successfully");
+  } catch (error) {
+    log(`Failed to connect to MongoDB: ${error}`);
+    process.exit(1); // Exit if MongoDB connection fails
   }
   
   const server = await registerRoutes(app);
