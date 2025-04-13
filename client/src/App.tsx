@@ -10,6 +10,7 @@ import VendorProfilePage from "@/pages/vendor-profile";
 import UserProfilePage from "@/pages/user-profile";
 import DashboardPage from "@/pages/dashboard";
 import VendorServicesPage from "@/pages/vendor-services";
+import BookingsPage from "@/pages/bookings";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/profile" component={UserProfilePage} />
       <Route path="/dashboard" component={DashboardPage} />
       <Route path="/services" component={VendorServicesPage} />
+      <Route path="/bookings" component={BookingsPage} />
       <Route component={NotFound} />
     </Switch>
   );
