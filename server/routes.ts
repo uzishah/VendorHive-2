@@ -106,7 +106,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User routes
   app.get('/api/users/me', authenticateToken, async (req, res, next) => {
     try {
+      // req.user.id from JWT might be numeric or string (MongoDB ObjectId)
       const user = await storage.getUser(req.user.id);
+      
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
       }
@@ -123,7 +125,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user: userWithoutPassword,
         vendorProfile 
       });
+      
+      // For debugging
+      console.log('User retrieved successfully:', userWithoutPassword.username);
     } catch (error) {
+      console.error('Error in /api/users/me endpoint:', error);
       next(error);
     }
   });

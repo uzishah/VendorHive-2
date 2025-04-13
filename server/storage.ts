@@ -274,9 +274,16 @@ export class MongoDBStorage implements IStorage {
   }
 
   // User related methods
-  async getUser(id: number): Promise<User | undefined> {
+  async getUser(id: number | string): Promise<User | undefined> {
     try {
-      const user = await UserModel.findOne({ id });
+      // Try to find by numeric id first
+      let user = await UserModel.findOne({ id });
+      
+      // If not found and the id is a string that looks like a MongoDB ObjectId
+      if (!user && typeof id === 'string' && id.match(/^[0-9a-fA-F]{24}$/)) {
+        user = await UserModel.findById(id);
+      }
+      
       return user ? this.mongoUserToUser(user) : undefined;
     } catch (error) {
       console.error('Error getting user:', error);
@@ -630,17 +637,17 @@ export class MongoDBStorage implements IStorage {
   // Helper methods to convert MongoDB documents to TypeScript types
   private mongoUserToUser(mongoUser: any): User {
     return {
-      id: mongoUser.id,
+      id: mongoUser.id || mongoUser._id.toString(), // Use MongoDB _id if id is not present
       name: mongoUser.name,
       username: mongoUser.username,
       email: mongoUser.email,
       password: mongoUser.password,
-      role: mongoUser.role,
+      role: mongoUser.role || 'user', // Default to 'user' if role is not set
       profileImage: mongoUser.profileImage || null,
       phone: mongoUser.phone || null,
       bio: mongoUser.bio || null,
       location: mongoUser.location || null,
-      joinedAt: mongoUser.joinedAt
+      joinedAt: mongoUser.joinedAt || new Date() // Default to current date if not set
     };
   }
 
