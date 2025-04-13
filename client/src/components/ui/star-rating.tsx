@@ -1,55 +1,72 @@
 import React from 'react';
-import { cn } from '@/lib/utils';
+import { Star } from 'lucide-react';
 
 interface StarRatingProps {
   rating: number;
-  maxRating?: number;
   size?: 'sm' | 'md' | 'lg';
   showCount?: boolean;
   count?: number;
   className?: string;
 }
 
-const StarRating: React.FC<StarRatingProps> = ({
-  rating,
-  maxRating = 5,
-  size = 'md',
-  showCount = false,
+const StarRating: React.FC<StarRatingProps> = ({ 
+  rating, 
+  size = 'md', 
+  showCount = false, 
   count = 0,
-  className
+  className = '' 
 }) => {
-  const sizeClass = {
-    sm: 'text-xs',
-    md: 'text-sm',
-    lg: 'text-lg'
+  // Calculate the integer and fractional parts of the rating
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 >= 0.5;
+  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+  // Determine star sizes based on prop
+  const starSizes = {
+    sm: 'w-3 h-3',
+    md: 'w-4 h-4',
+    lg: 'w-5 h-5'
   };
   
+  const starSize = starSizes[size];
+  
   return (
-    <div className={cn('flex items-center', className)}>
-      <div className="flex items-center">
-        {[...Array(maxRating)].map((_, i) => {
-          const starValue = i + 1;
-          const isFilled = starValue <= rating;
-          const isHalfFilled = !isFilled && starValue - 0.5 <= rating;
-          
-          return (
-            <span key={i} className={`${sizeClass[size]} text-yellow-400`}>
-              {isFilled ? (
-                <i className="fas fa-star" />
-              ) : isHalfFilled ? (
-                <i className="fas fa-star-half-alt" />
-              ) : (
-                <i className="far fa-star" />
-              )}
-            </span>
-          );
-        })}
+    <div className={`flex items-center ${className}`}>
+      <div className="flex">
+        {/* Full stars */}
+        {Array.from({ length: fullStars }).map((_, i) => (
+          <Star 
+            key={`full-${i}`} 
+            className={`${starSize} text-yellow-400 fill-yellow-400`}
+          />
+        ))}
+        
+        {/* Half star if applicable */}
+        {hasHalfStar && (
+          <div className="relative">
+            <Star 
+              className={`${starSize} text-gray-300 fill-gray-300`}
+            />
+            <div className="absolute top-0 left-0 overflow-hidden w-1/2">
+              <Star 
+                className={`${starSize} text-yellow-400 fill-yellow-400`}
+              />
+            </div>
+          </div>
+        )}
+        
+        {/* Empty stars */}
+        {Array.from({ length: emptyStars }).map((_, i) => (
+          <Star 
+            key={`empty-${i}`} 
+            className={`${starSize} text-gray-300`}
+          />
+        ))}
       </div>
       
+      {/* Optional review count */}
       {showCount && (
-        <span className="text-gray-500 text-sm ml-2">
-          {count} {count === 1 ? 'review' : 'reviews'}
-        </span>
+        <span className="ml-2 text-xs text-gray-500">{`(${count})`}</span>
       )}
     </div>
   );
