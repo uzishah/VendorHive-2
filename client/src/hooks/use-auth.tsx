@@ -137,6 +137,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: 'Login successful',
         description: `Welcome back, ${data.user.name}!`,
       });
+      
+      // Redirect to appropriate dashboard based on user role
+      if (data.user.role === 'vendor') {
+        window.location.href = '/dashboard';
+      } else {
+        window.location.href = '/';
+      }
     } catch (error) {
       console.error('Login error:', error);
       toast({
@@ -181,6 +188,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: 'Registration successful',
         description: `Welcome to VendorHive, ${data.user.name}!`,
       });
+      
+      // Redirect to appropriate dashboard based on user role
+      if (data.user.role === 'vendor') {
+        window.location.href = '/dashboard';
+      } else {
+        window.location.href = '/';
+      }
     } catch (error) {
       console.error('Registration error:', error);
       toast({

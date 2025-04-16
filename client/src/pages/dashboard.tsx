@@ -234,12 +234,28 @@ const DashboardPage: React.FC = () => {
               <Settings className="mr-2 h-4 w-4" />
               Edit Profile
             </Button>
-            <Button onClick={() => setIsAddServiceModalOpen(true)}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Service
+            <Button onClick={() => setIsAddServiceModalOpen(true)} size="lg" className="bg-primary hover:bg-primary-dark">
+              <PlusCircle className="mr-2 h-5 w-5" />
+              Create New Service
             </Button>
           </div>
         </div>
+        
+        {/* Call-to-action banner for creating services */}
+        {(!services || services.length === 0) && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8 text-center">
+            <h2 className="text-xl font-semibold text-blue-800 mb-2">Start offering services to your customers</h2>
+            <p className="text-blue-600 mb-4">Add your services to start accepting bookings from customers</p>
+            <Button 
+              onClick={() => setIsAddServiceModalOpen(true)} 
+              size="lg" 
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <PlusCircle className="mr-2 h-5 w-5" />
+              Create Your First Service
+            </Button>
+          </div>
+        )}
         
         {/* Stats cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -521,11 +537,20 @@ const DashboardPage: React.FC = () => {
           
           <TabsContent value="services">
             <Card>
-              <CardHeader>
-                <CardTitle>My Services</CardTitle>
-                <CardDescription>
-                  Manage your services and offerings
-                </CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>My Services</CardTitle>
+                  <CardDescription>
+                    Manage your services and offerings
+                  </CardDescription>
+                </div>
+                <Button 
+                  onClick={() => setIsAddServiceModalOpen(true)} 
+                  className="bg-primary hover:bg-primary-dark"
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Create Service
+                </Button>
               </CardHeader>
               <CardContent>
                 {servicesLoading ? (
