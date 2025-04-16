@@ -731,6 +731,23 @@ const DashboardPage: React.FC = () => {
                   )}
                 />
                 
+                <FormField
+                  control={serviceForm.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          placeholder="e.g. Consulting, Photography, Design" 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={serviceForm.control}

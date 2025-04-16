@@ -38,13 +38,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                 {navItems.map((item) => (
                   <Link key={item.name} href={item.path}>
-                    <a className={`${
+                    <div className={`${
                       location === item.path 
                         ? 'border-primary text-secondary-dark' 
                         : 'border-transparent text-secondary-light hover:border-gray-300 hover:text-secondary-dark'
-                      } border-b-2 px-1 pt-1 text-sm font-medium`}>
+                      } border-b-2 px-1 pt-1 text-sm font-medium cursor-pointer`}>
                       {item.name}
-                    </a>
+                    </div>
                   </Link>
                 ))}
               </div>
@@ -61,32 +61,40 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem>
-                      <User className="mr-2 h-4 w-4" />
+                    <DropdownMenuItem asChild>
                       <Link href="/profile">
-                        <span>Profile</span>
+                        <div className="flex items-center">
+                          <User className="mr-2 h-4 w-4" />
+                          <span>Profile</span>
+                        </div>
                       </Link>
                     </DropdownMenuItem>
                     {user?.role === 'vendor' && (
                       <>
-                        <DropdownMenuItem>
-                          <FileText className="mr-2 h-4 w-4" />
+                        <DropdownMenuItem asChild>
                           <Link href="/dashboard">
-                            <span>Dashboard</span>
+                            <div className="flex items-center">
+                              <FileText className="mr-2 h-4 w-4" />
+                              <span>Dashboard</span>
+                            </div>
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Calendar className="mr-2 h-4 w-4" />
+                        <DropdownMenuItem asChild>
                           <Link href="/bookings">
-                            <span>Bookings</span>
+                            <div className="flex items-center">
+                              <Calendar className="mr-2 h-4 w-4" />
+                              <span>Bookings</span>
+                            </div>
                           </Link>
                         </DropdownMenuItem>
                       </>
                     )}
-                    <DropdownMenuItem>
-                      <Settings className="mr-2 h-4 w-4" />
+                    <DropdownMenuItem asChild>
                       <Link href="/settings">
-                        <span>Settings</span>
+                        <div className="flex items-center">
+                          <Settings className="mr-2 h-4 w-4" />
+                          <span>Settings</span>
+                        </div>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
@@ -129,16 +137,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           <div className="pt-2 pb-3 space-y-1">
             {navItems.map((item) => (
               <Link key={item.name} href={item.path}>
-                <a 
+                <div 
                   className={`${
                     location === item.path
                       ? 'bg-gray-50 border-primary text-primary'
                       : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'
-                  } block pl-3 pr-4 py-2 border-l-4 text-base font-medium`}
+                  } block pl-3 pr-4 py-2 border-l-4 text-base font-medium cursor-pointer`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {item.name}
-                </a>
+                </div>
               </Link>
             ))}
           </div>
@@ -146,28 +154,28 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             {isAuthenticated ? (
               <div className="space-y-1">
                 <Link href="/profile">
-                  <a className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100" onClick={() => setIsMobileMenuOpen(false)}>
+                  <div className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 cursor-pointer" onClick={() => setIsMobileMenuOpen(false)}>
                     Profile
-                  </a>
+                  </div>
                 </Link>
                 {user?.role === 'vendor' && (
                   <>
                     <Link href="/dashboard">
-                      <a className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100" onClick={() => setIsMobileMenuOpen(false)}>
+                      <div className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 cursor-pointer" onClick={() => setIsMobileMenuOpen(false)}>
                         Dashboard
-                      </a>
+                      </div>
                     </Link>
                     <Link href="/bookings">
-                      <a className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100" onClick={() => setIsMobileMenuOpen(false)}>
+                      <div className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 cursor-pointer" onClick={() => setIsMobileMenuOpen(false)}>
                         Bookings
-                      </a>
+                      </div>
                     </Link>
                   </>
                 )}
                 <Link href="/settings">
-                  <a className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100" onClick={() => setIsMobileMenuOpen(false)}>
+                  <div className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 cursor-pointer" onClick={() => setIsMobileMenuOpen(false)}>
                     Settings
-                  </a>
+                  </div>
                 </Link>
                 <button 
                   className="w-full text-left block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
