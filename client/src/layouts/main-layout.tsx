@@ -190,14 +190,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             ) : (
               <div className="space-y-1">
                 <Link href="/auth?tab=login">
-                  <a className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100" onClick={() => setIsMobileMenuOpen(false)}>
+                  <div className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 cursor-pointer" onClick={() => setIsMobileMenuOpen(false)}>
                     Log in
-                  </a>
+                  </div>
                 </Link>
                 <Link href="/auth?tab=register">
-                  <a className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100" onClick={() => setIsMobileMenuOpen(false)}>
+                  <div className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 cursor-pointer" onClick={() => setIsMobileMenuOpen(false)}>
                     Sign up
-                  </a>
+                  </div>
                 </Link>
               </div>
             )}
@@ -216,51 +216,51 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           <nav className="-mx-5 -my-2 flex flex-wrap justify-center" aria-label="Footer">
             <div className="px-5 py-2">
               <Link href="/about">
-                <a className="text-base text-gray-500 hover:text-gray-900">
+                <div className="text-base text-gray-500 hover:text-gray-900 cursor-pointer">
                   About
-                </a>
+                </div>
               </Link>
             </div>
             <div className="px-5 py-2">
               <Link href="/services">
-                <a className="text-base text-gray-500 hover:text-gray-900">
+                <div className="text-base text-gray-500 hover:text-gray-900 cursor-pointer">
                   Services
-                </a>
+                </div>
               </Link>
             </div>
             <div className="px-5 py-2">
               <Link href="/pricing">
-                <a className="text-base text-gray-500 hover:text-gray-900">
+                <div className="text-base text-gray-500 hover:text-gray-900 cursor-pointer">
                   Pricing
-                </a>
+                </div>
               </Link>
             </div>
             <div className="px-5 py-2">
               <Link href="/vendors">
-                <a className="text-base text-gray-500 hover:text-gray-900">
+                <div className="text-base text-gray-500 hover:text-gray-900 cursor-pointer">
                   Vendors
-                </a>
+                </div>
               </Link>
             </div>
             <div className="px-5 py-2">
               <Link href="/contact">
-                <a className="text-base text-gray-500 hover:text-gray-900">
+                <div className="text-base text-gray-500 hover:text-gray-900 cursor-pointer">
                   Contact
-                </a>
+                </div>
               </Link>
             </div>
             <div className="px-5 py-2">
               <Link href="/terms">
-                <a className="text-base text-gray-500 hover:text-gray-900">
+                <div className="text-base text-gray-500 hover:text-gray-900 cursor-pointer">
                   Terms
-                </a>
+                </div>
               </Link>
             </div>
             <div className="px-5 py-2">
               <Link href="/privacy">
-                <a className="text-base text-gray-500 hover:text-gray-900">
+                <div className="text-base text-gray-500 hover:text-gray-900 cursor-pointer">
                   Privacy
-                </a>
+                </div>
               </Link>
             </div>
           </nav>
