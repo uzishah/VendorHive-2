@@ -125,12 +125,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(data.token);
       setVendorProfile(data.vendorProfile || null);
       
+      // Save login timestamp to prevent redirect loops
+      const timestamp = new Date().getTime().toString();
+      localStorage.setItem('registeredAt', timestamp);
+      
       // Save to localStorage
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       
       if (data.vendorProfile) {
         localStorage.setItem('vendorProfile', JSON.stringify(data.vendorProfile));
+        console.log('Vendor profile saved during login:', data.vendorProfile);
       }
       
       toast({
@@ -138,10 +143,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: `Welcome back, ${data.user.name}!`,
       });
       
-      // Redirect to appropriate dashboard based on user role
-      if (data.user.role === 'vendor') {
+      // Redirect to appropriate dashboard based on user role and profile
+      if (data.user.role === 'vendor' && data.vendorProfile) {
+        console.log('Redirecting to vendor dashboard after login');
         window.location.href = '/dashboard';
       } else {
+        console.log('Redirecting to home page after login');
         window.location.href = '/';
       }
     } catch (error) {
@@ -176,12 +183,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(data.token);
       setVendorProfile(data.vendorProfile || null);
       
+      // Save registration timestamp to prevent redirect loops
+      const timestamp = new Date().getTime().toString();
+      localStorage.setItem('registeredAt', timestamp);
+      
       // Save to localStorage
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       
       if (data.vendorProfile) {
         localStorage.setItem('vendorProfile', JSON.stringify(data.vendorProfile));
+        console.log('Vendor profile saved:', data.vendorProfile);
       }
       
       toast({
@@ -189,10 +201,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: `Welcome to VendorHive, ${data.user.name}!`,
       });
       
-      // Redirect to appropriate dashboard based on user role
-      if (data.user.role === 'vendor') {
+      // Redirect to appropriate dashboard based on user role and profile
+      if (data.user.role === 'vendor' && data.vendorProfile) {
+        console.log('Redirecting to vendor dashboard');
         window.location.href = '/dashboard';
       } else {
+        console.log('Redirecting to home page');
         window.location.href = '/';
       }
     } catch (error) {
