@@ -54,9 +54,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // If user is registering as a vendor, create vendor profile
+      let vendorProfile = null;
       if (userData.role === 'vendor' && req.body.vendor) {
         const vendorData = insertVendorSchema.parse(req.body.vendor);
-        await storage.createVendor({
+        vendorProfile = await storage.createVendor({
           ...vendorData,
           userId: user.id
         });
@@ -65,9 +66,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate JWT token
       const token = generateToken(user);
       
-      // Return user info (without password) and token
+      // Return user info (without password), token, and vendor profile if applicable
       const { password, ...userWithoutPassword } = user;
-      res.status(201).json({ user: userWithoutPassword, token });
+      res.status(201).json({ 
+        user: userWithoutPassword, 
+        token, 
+        vendorProfile 
+      });
     } catch (error) {
       next(error);
     }
@@ -96,9 +101,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate JWT token
       const token = generateToken(user);
       
-      // Return user info (without password) and token
+      // Check if user is a vendor and get vendor profile
+      let vendorProfile = null;
+      if (user.role === 'vendor') {
+        vendorProfile = await storage.getVendorByUserId(user.id);
+      }
+      
+      // Return user info (without password), token, and vendor profile if applicable
       const { password: _, ...userWithoutPassword } = user;
-      res.json({ user: userWithoutPassword, token });
+      res.json({ 
+        user: userWithoutPassword, 
+        token,
+        vendorProfile
+      });
     } catch (error) {
       next(error);
     }

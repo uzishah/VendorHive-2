@@ -61,12 +61,27 @@ const AuthPage: React.FC = () => {
     }
   }, [tabParam]);
   
-  // Redirect if already authenticated
+  // Redirect if already authenticated when page loads
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/');
+    // Only redirect on initial load, not after successful login/registration
+    if (isAuthenticated && !isLoading) {
+      // Get the registered time from storage to prevent immediate redirect after registration
+      const registeredTime = localStorage.getItem('registeredAt');
+      const currentTime = new Date().getTime();
+      
+      // If there's no registration timestamp or it's been more than 2 seconds since registration
+      // This prevents redirection right after registration
+      if (!registeredTime || (currentTime - parseInt(registeredTime)) > 2000) {
+        // For existing sessions, redirect users based on their role
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (user?.role === 'vendor') {
+          navigate('/dashboard');
+        } else {
+          navigate('/');
+        }
+      }
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, isLoading]);
   
   // Login form setup
   const loginForm = useForm<z.infer<typeof loginSchema>>({
