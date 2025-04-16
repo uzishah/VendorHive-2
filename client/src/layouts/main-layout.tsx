@@ -31,7 +31,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0 flex items-center">
-                <Logo />
+                <Link href="/">
+                  <Logo />
+                </Link>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                 {navItems.map((item) => (

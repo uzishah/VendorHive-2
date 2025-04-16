@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
@@ -41,6 +41,7 @@ const serviceSchema = z.object({
   name: z.string().min(2, "Service name must be at least 2 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   price: z.string().min(1, "Price is required"),
+  category: z.string().min(2, "Category is required"),
   duration: z.string().optional(),
   availability: z.boolean().default(true),
 });
@@ -120,6 +121,7 @@ const DashboardPage: React.FC = () => {
       name: '',
       description: '',
       price: '',
+      category: '',
       duration: '',
       availability: true,
     },
