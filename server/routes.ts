@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { hashPassword, comparePassword, generateToken } from "./auth";
 import { authenticateToken, authorizeRole, authorizeVendor } from "./middleware";
 import { upload, uploadImage } from "./cloudinary";
+import { VendorModel } from "./db";
 import { 
   insertUserSchema, 
   insertVendorSchema, 
@@ -96,10 +97,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           try {
             const vendorData = insertVendorSchema.parse(req.body.vendor);
+            
+            // Get the next available vendor ID to ensure it's unique and not null
+            const lastVendor = await VendorModel.findOne().sort({ id: -1 });
+            const vendorId = lastVendor ? lastVendor.id + 1 : 1;
+            
             vendorProfile = await storage.createVendor({
               ...vendorData,
-              userId: user.id
+              userId: user.id,
+              id: vendorId  // Explicitly set the numeric ID
             });
+            
+            console.log(`Vendor created successfully with ID: ${vendorId}`);
             console.log('Vendor profile created:', JSON.stringify(vendorProfile, null, 2));
             
             // CRITICAL FIX: Verify user still has vendor role
@@ -113,12 +122,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } catch (parseError) {
             console.error('Error parsing vendor data:', parseError);
             // If validation fails, create a minimal valid vendor profile
+            // Get the next available vendor ID to ensure it's unique and not null
+            const lastVendor = await VendorModel.findOne().sort({ id: -1 });
+            const vendorId = lastVendor ? lastVendor.id + 1 : 1;
+            
             vendorProfile = await storage.createVendor({
               businessName: user.name + "'s Business",
               category: "General Services",
               description: "A new vendor on VendorHive",
-              userId: user.id
+              userId: user.id,
+              id: vendorId  // Explicitly set the numeric ID
             });
+            
+            console.log(`Fallback vendor created with ID: ${vendorId}`);
             console.log('Created fallback vendor profile:', JSON.stringify(vendorProfile, null, 2));
           }
         } catch (vendorError) {
