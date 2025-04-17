@@ -393,15 +393,26 @@ export class MongoDBStorage implements IStorage {
         return undefined;
       }
       
-      // Then find the vendor using the MongoDB ObjectId
-      const vendor = await VendorModel.findOne({ userId: user._id });
+      console.log('Looking up vendor for user:', user);
+      
+      // Try to find vendor using MongoDB ObjectId
+      let vendor = await VendorModel.findOne({ userId: user._id });
+      
+      // If not found, also try with numeric ID (for backwards compatibility)
       if (!vendor) {
-        console.log(`No vendor found for user with ID ${userId}`);
-        return undefined;
+        vendor = await VendorModel.findOne({ userId });
+        if (!vendor) {
+          console.log(`No vendor found for user with ID ${userId}`);
+          return undefined;
+        }
       }
       
-      console.log(`Found vendor for user ID ${userId}:`, vendor);
-      return this.mongoVendorToVendor(vendor);
+      // Store the numeric user ID for reference
+      const vendorData = vendor.toObject();
+      vendorData.userIdNumber = userId;
+      
+      console.log(`Found vendor for user ID ${userId}:`, vendorData);
+      return this.mongoVendorToVendor(vendorData);
     } catch (error) {
       console.error('Error getting vendor by user ID:', error);
       return undefined;
