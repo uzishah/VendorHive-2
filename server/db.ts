@@ -68,11 +68,30 @@ const vendorSchema = new mongoose.Schema({
   businessHours: Object,
   rating: { type: Number, default: 0 },
   reviewCount: { type: Number, default: 0 },
-  id: { type: Number, unique: true } // Add numeric ID field for internal references
+  id: { 
+    type: Number, 
+    required: true, 
+    unique: true,
+    validate: {
+      validator: function(v) {
+        return !isNaN(v) && v > 0;
+      },
+      message: props => `${props.value} is not a valid positive numeric ID!`
+    } 
+  } // Numeric ID field for internal references
 });
 
 const serviceSchema = new mongoose.Schema({
-  vendorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor', required: true },
+  vendorId: { 
+    type: Number, 
+    required: true, 
+    validate: {
+      validator: function(v: number): boolean {
+        return !isNaN(v) && v > 0;
+      },
+      message: (props: any) => `${props.value} is not a valid vendor ID!`
+    }
+  },
   name: { type: String, required: true },
   category: { type: String, required: true },
   description: { type: String, required: true },
@@ -88,7 +107,17 @@ const serviceSchema = new mongoose.Schema({
   availableDates: [Date],
   availability: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now },
-  id: { type: Number, unique: true } // Add numeric ID field for internal references
+  id: { 
+    type: Number, 
+    required: true, 
+    unique: true,
+    validate: {
+      validator: function(v) {
+        return !isNaN(v) && v > 0;
+      },
+      message: props => `${props.value} is not a valid positive numeric ID!`
+    }
+  } // Numeric ID field for internal references
 });
 
 const bookingSchema = new mongoose.Schema({
