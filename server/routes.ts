@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { hashPassword, comparePassword, generateToken } from "./auth";
 import { authenticateToken, authorizeRole, authorizeVendor } from "./middleware";
 import { upload, uploadImage } from "./cloudinary";
-import { VendorModel } from "./db";
+import { VendorModel, ServiceModel } from "./db";
 import { 
   insertUserSchema, 
   insertVendorSchema, 
@@ -151,19 +151,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         try {
           const vendorData = insertVendorSchema.parse(req.body.vendor);
+          
+          // Get the next available vendor ID to ensure it's unique and not null
+          const lastVendor = await VendorModel.findOne().sort({ id: -1 });
+          const vendorId = lastVendor ? lastVendor.id + 1 : 1;
+          
           vendorProfile = await storage.createVendor({
             ...vendorData,
-            userId: user.id
+            userId: user.id,
+            id: vendorId
           });
+          
+          console.log(`Vendor created successfully with ID: ${vendorId}`);
           console.log('Vendor profile created after role fix:', JSON.stringify(vendorProfile, null, 2));
         } catch (error) {
           console.error('Error creating vendor profile after role fix:', error);
+          // Get the next available vendor ID to ensure it's unique and not null
+          const lastVendor = await VendorModel.findOne().sort({ id: -1 });
+          const vendorId = lastVendor ? lastVendor.id + 1 : 1;
+          
           vendorProfile = await storage.createVendor({
             businessName: user.name + "'s Business",
             category: "General Services",
             description: "A new vendor on VendorHive",
-            userId: user.id
+            userId: user.id,
+            id: vendorId
           });
+          
+          console.log(`Emergency fallback vendor created with ID: ${vendorId}`);
         }
       }
       
@@ -428,8 +443,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: 'You can only create services for your own vendor profile' });
       }
       
-      // Create service
-      const service = await storage.createService(serviceData);
+      // Get the next available service ID 
+      const lastService = await ServiceModel.findOne().sort({ id: -1 });
+      const serviceId = lastService ? lastService.id + 1 : 1;
+      
+      // Create service with explicit ID
+      const service = await storage.createService({
+        ...serviceData,
+        id: serviceId
+      });
       
       res.status(201).json(service);
     } catch (error) {

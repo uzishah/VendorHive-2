@@ -75,14 +75,11 @@ export const insertUserSchema = createInsertSchema(users).omit({
 });
 
 export const insertVendorSchema = createInsertSchema(vendors).omit({
-  id: true,
   rating: true,
   reviewCount: true,
 });
 
-export const insertServiceSchema = createInsertSchema(services).omit({
-  id: true,
-});
+export const insertServiceSchema = createInsertSchema(services);
 
 export const insertBookingSchema = createInsertSchema(bookings).omit({
   id: true,
