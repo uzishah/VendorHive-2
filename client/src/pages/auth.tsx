@@ -127,21 +127,25 @@ const AuthPage: React.FC = () => {
   const onRegisterSubmit = async (values: z.infer<typeof registerSchema> & { vendor?: z.infer<typeof vendorSchema> }) => {
     const { terms, confirmPassword, userType, ...userData } = values;
     
-    // Explicitly set role based on userType to ensure it's correctly identified by the server
+    // Explicitly set role based on userType
+    // CRITICAL FIX: Ensure role property is correctly set to 'vendor' when userType is 'vendor'
+    const isVendorRegistration = userType === 'vendor';
     const userDataWithRole = {
       ...userData,
-      role: userType // Set role explicitly to match what the server expects
+      role: isVendorRegistration ? 'vendor' : 'user' // Ensure we explicitly set 'vendor' for vendor registrations
     };
     
-    console.log('Registering with data:', { 
-      userDataWithRole, 
-      isVendor: userType === 'vendor',
-      vendorData: values.vendor 
+    console.log('Vendor Registration Debug:', { 
+      userType,
+      isVendorRegistration,
+      role: userDataWithRole.role,
+      vendorDataPresent: !!values.vendor
     });
     
     // If registering as vendor, include vendor data
-    if (userType === 'vendor' && values.vendor) {
+    if (isVendorRegistration && values.vendor) {
       try {
+        console.log('Submitting vendor registration with role:', userDataWithRole.role);
         await registerUser(userDataWithRole, true, values.vendor);
       } catch (error) {
         console.error("Vendor registration error:", error);

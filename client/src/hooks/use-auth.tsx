@@ -167,17 +167,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     try {
+      // Force the role to be 'vendor' if isVendor is true, ensuring server receives correct role
       const registerData = {
         ...userData,
         role: isVendor ? 'vendor' : 'user',
       };
       
+      console.log('Registration data being sent to server:', {
+        providedRole: userData.role,
+        finalRole: registerData.role,
+        isVendorFlag: isVendor,
+        hasVendorData: !!vendorData
+      });
+      
+      // Always include vendor data for vendor registrations
       if (isVendor && vendorData) {
         registerData.vendor = vendorData;
       }
       
       const response = await apiRequest('POST', '/api/auth/register', registerData);
       const data = await response.json();
+      
+      console.log('Registration response from server:', {
+        receivedUserRole: data.user.role,
+        hasVendorProfile: !!data.vendorProfile
+      });
       
       setUser(data.user);
       setToken(data.token);
@@ -201,10 +215,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: `Welcome to VendorHive, ${data.user.name}!`,
       });
       
-      // Redirect based on user type - always direct vendors to dashboard, users to home
-      if (data.user.role === 'vendor') {
-        console.log('Redirecting to vendor dashboard');
+      // CRITICAL FIX: Use isVendor flag as the primary indicator for redirection,
+      // rather than relying solely on the server response which might be inconsistent
+      if (isVendor) {
+        console.log('Redirecting to vendor dashboard (based on isVendor flag)');
         window.location.href = '/dashboard';
+      } else if (data.user.role === 'vendor') {
+        console.log('Redirecting to vendor dashboard (based on server response)');
+        window.location.href = '/dashboard'; 
       } else {
         console.log('Redirecting to user home page');
         window.location.href = '/';
