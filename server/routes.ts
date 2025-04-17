@@ -466,29 +466,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Service routes
   app.post('/api/services', authenticateToken, authorizeRole(['vendor']), async (req, res, next) => {
     try {
-      const serviceData = insertServiceSchema.parse(req.body);
-      
-      // Get vendor by user ID
+      // Get vendor by user ID first (to ensure user is a vendor and get the vendorId)
       const vendor = await storage.getVendorByUserId(req.user.id);
       if (!vendor) {
         return res.status(404).json({ message: 'Vendor profile not found' });
       }
       
-      // Ensure vendorId matches the authenticated vendor
-      if (serviceData.vendorId !== vendor.id) {
+      console.log(`Found vendor with ID: ${vendor.id} (type: ${typeof vendor.id})`);
+      
+      // Make sure vendorId is set to the numeric vendor ID
+      const serviceData = insertServiceSchema.parse({
+        ...req.body,
+        vendorId: Number(vendor.id) // Force proper numeric type
+      });
+      
+      console.log(`Parsed service data with vendorId: ${serviceData.vendorId} (type: ${typeof serviceData.vendorId})`);
+      
+      // Double-check the vendorId matches
+      if (serviceData.vendorId !== Number(vendor.id)) {
         return res.status(403).json({ message: 'You can only create services for your own vendor profile' });
       }
       
       // Get the next available service ID
       const serviceId = await getNextServiceId();
       
-      // Create service with explicit ID
-      const service = await storage.createService({
+      // Create service object with explicit ID
+      const serviceDataToCreate = {
         ...serviceData,
         id: serviceId
-      });
+      };
       
-      res.status(201).json(service);
+      // Log the complete service data for debugging
+      console.log('Creating service with data:', JSON.stringify(serviceDataToCreate, null, 2));
+      
+      // Create service
+      try {
+        const service = await storage.createService(serviceDataToCreate);
+        console.log('Service created successfully with ID:', service.id);
+        res.status(201).json(service);
+      } catch (serviceError) {
+        console.error('Error creating service:', serviceError);
+        throw serviceError;
+      }
     } catch (error) {
       next(error);
     }
@@ -531,8 +550,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Vendor profile not found' });
       }
       
-      // Ensure vendor owns the service
-      if (service.vendorId !== vendor.id) {
+      // Ensure vendor owns the service (comparing numeric IDs)
+      if (Number(service.vendorId) !== Number(vendor.id)) {
+        console.log(`Service vendorId: ${service.vendorId} (${typeof service.vendorId}) doesn't match vendor.id: ${vendor.id} (${typeof vendor.id})`);
         return res.status(403).json({ message: 'You can only update your own services' });
       }
       
@@ -569,8 +589,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Vendor profile not found' });
       }
       
-      // Ensure vendor owns the service
-      if (service.vendorId !== vendor.id) {
+      // Ensure vendor owns the service (comparing numeric IDs)
+      if (Number(service.vendorId) !== Number(vendor.id)) {
+        console.log(`Service vendorId: ${service.vendorId} (${typeof service.vendorId}) doesn't match vendor.id: ${vendor.id} (${typeof vendor.id})`);
         return res.status(403).json({ message: 'You can only delete your own services' });
       }
       
