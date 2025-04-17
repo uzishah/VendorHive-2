@@ -15,6 +15,42 @@ import {
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
 
+// Helper function to safely get the next available vendor ID
+async function getNextVendorId(): Promise<number> {
+  try {
+    const lastVendor = await VendorModel.findOne().sort({ id: -1 });
+    let vendorId = 1; // Default start ID
+    
+    if (lastVendor && lastVendor.id && !isNaN(Number(lastVendor.id))) {
+      vendorId = Number(lastVendor.id) + 1;
+    }
+    
+    console.log(`Calculated vendor ID: ${vendorId} (type: ${typeof vendorId})`);
+    return vendorId;
+  } catch (error) {
+    console.error('Error calculating next vendor ID:', error);
+    return 1; // Fallback to ID 1 if there's an error
+  }
+}
+
+// Helper function to safely get the next available service ID
+async function getNextServiceId(): Promise<number> {
+  try {
+    const lastService = await ServiceModel.findOne().sort({ id: -1 });
+    let serviceId = 1; // Default start ID
+    
+    if (lastService && lastService.id && !isNaN(Number(lastService.id))) {
+      serviceId = Number(lastService.id) + 1;
+    }
+    
+    console.log(`Calculated service ID: ${serviceId} (type: ${typeof serviceId})`);
+    return serviceId;
+  } catch (error) {
+    console.error('Error calculating next service ID:', error);
+    return 1; // Fallback to ID 1 if there's an error
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Error handling middleware
   const handleErrors = (err: Error, req: Request, res: Response, next: NextFunction) => {
@@ -443,9 +479,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: 'You can only create services for your own vendor profile' });
       }
       
-      // Get the next available service ID 
-      const lastService = await ServiceModel.findOne().sort({ id: -1 });
-      const serviceId = lastService ? lastService.id + 1 : 1;
+      // Get the next available service ID
+      const serviceId = await getNextServiceId();
       
       // Create service with explicit ID
       const service = await storage.createService({
