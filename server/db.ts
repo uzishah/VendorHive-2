@@ -1,10 +1,15 @@
 import { MongoClient, ServerApiVersion } from 'mongodb';
 import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 // MongoDB connection URI (from environment variable)
 const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
+  console.error('MONGODB_URI is not defined');
   throw new Error('Please define the MONGODB_URI environment variable');
 }
 
