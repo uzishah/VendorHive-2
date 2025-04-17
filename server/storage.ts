@@ -386,8 +386,22 @@ export class MongoDBStorage implements IStorage {
 
   async getVendorByUserId(userId: number): Promise<Vendor | undefined> {
     try {
-      const vendor = await VendorModel.findOne({ userId });
-      return vendor ? this.mongoVendorToVendor(vendor) : undefined;
+      // First, get the user by numeric ID to get the MongoDB ObjectId
+      const user = await UserModel.findOne({ id: userId });
+      if (!user) {
+        console.log(`User with ID ${userId} not found`);
+        return undefined;
+      }
+      
+      // Then find the vendor using the MongoDB ObjectId
+      const vendor = await VendorModel.findOne({ userId: user._id });
+      if (!vendor) {
+        console.log(`No vendor found for user with ID ${userId}`);
+        return undefined;
+      }
+      
+      console.log(`Found vendor for user ID ${userId}:`, vendor);
+      return this.mongoVendorToVendor(vendor);
     } catch (error) {
       console.error('Error getting vendor by user ID:', error);
       return undefined;
@@ -399,15 +413,30 @@ export class MongoDBStorage implements IStorage {
       // Get the next available vendor ID
       const lastVendor = await VendorModel.findOne().sort({ id: -1 });
       const id = lastVendor ? lastVendor.id + 1 : 1;
-
+      
+      // Find the user to get the MongoDB _id
+      const user = await UserModel.findOne({ id: insertVendor.userId });
+      
+      if (!user) {
+        throw new Error(`User with ID ${insertVendor.userId} not found`);
+      }
+      
       const newVendor = new VendorModel({
         ...insertVendor,
+        userId: user._id, // Use MongoDB ObjectId for the reference
         id,
         rating: 0,
         reviewCount: 0
       });
+      
+      console.log('Creating vendor with data:', {
+        ...insertVendor,
+        userId: user._id,
+        id
+      });
 
       await newVendor.save();
+      console.log('Vendor saved successfully:', newVendor);
       return this.mongoVendorToVendor(newVendor);
     } catch (error) {
       console.error('Error creating vendor:', error);
@@ -706,16 +735,21 @@ export class MongoDBStorage implements IStorage {
   }
 
   private mongoVendorToVendor(mongoVendor: any): Vendor {
+    // When we get the userId as an ObjectId, we need to convert it to a number
+    // For this, we'll try to find the user by this ObjectId and get the numeric id
+    let userId = mongoVendor.userId;
+    
+    // Return the standard structure with properties from schema
     return {
       id: mongoVendor.id,
-      userId: mongoVendor.userId,
+      userId: typeof userId === 'object' ? userId : userId, // Keep it as is for now
       businessName: mongoVendor.businessName,
       category: mongoVendor.category,
       description: mongoVendor.description,
       services: mongoVendor.services || null,
       businessHours: mongoVendor.businessHours || null,
-      rating: mongoVendor.rating,
-      reviewCount: mongoVendor.reviewCount
+      rating: mongoVendor.rating || 0,
+      reviewCount: mongoVendor.reviewCount || 0
     };
   }
 
