@@ -67,7 +67,8 @@ const vendorSchema = new mongoose.Schema({
   services: [String],
   businessHours: Object,
   rating: { type: Number, default: 0 },
-  reviewCount: { type: Number, default: 0 }
+  reviewCount: { type: Number, default: 0 },
+  id: { type: Number, unique: true } // Add numeric ID field for internal references
 });
 
 const serviceSchema = new mongoose.Schema({
@@ -86,7 +87,8 @@ const serviceSchema = new mongoose.Schema({
   }],
   availableDates: [Date],
   availability: { type: Boolean, default: true },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  id: { type: Number, unique: true } // Add numeric ID field for internal references
 });
 
 const bookingSchema = new mongoose.Schema({
