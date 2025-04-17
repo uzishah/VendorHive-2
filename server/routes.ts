@@ -30,7 +30,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.post('/api/auth/register', async (req, res, next) => {
     try {
+      console.log('Registration request body:', JSON.stringify(req.body, null, 2));
+      
       const userData = insertUserSchema.parse(req.body);
+      console.log('Parsed user data:', JSON.stringify(userData, null, 2));
       
       // Check if email already exists
       const existingUserByEmail = await storage.getUserByEmail(userData.email);
@@ -52,15 +55,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...userData,
         password: hashedPassword
       });
+      console.log('Created user:', JSON.stringify(user, null, 2));
       
       // If user is registering as a vendor, create vendor profile
       let vendorProfile = null;
+      console.log('Checking vendor condition:', {
+        isVendorRole: userData.role === 'vendor', 
+        hasVendorData: !!req.body.vendor
+      });
+      
       if (userData.role === 'vendor' && req.body.vendor) {
+        console.log('Creating vendor profile with data:', JSON.stringify(req.body.vendor, null, 2));
         const vendorData = insertVendorSchema.parse(req.body.vendor);
         vendorProfile = await storage.createVendor({
           ...vendorData,
           userId: user.id
         });
+        console.log('Vendor profile created:', JSON.stringify(vendorProfile, null, 2));
       }
       
       // Generate JWT token
