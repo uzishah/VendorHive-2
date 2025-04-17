@@ -59,6 +59,18 @@ const DashboardPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [isAddServiceModalOpen, setIsAddServiceModalOpen] = useState(false);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+  
+  // CRITICAL FIX: Move all hook calls before the conditional return
+  // to maintain consistent hook ordering (React Hooks rule)
+  const { data: vendorData } = useQuery({
+    queryKey: ['/api/vendors/user', user?.id],
+    queryFn: () => user?.id ? getVendorByUserId(user.id) : null,
+    enabled: !!user && user.role === 'vendor',
+  });
+  
+  // Using vendorProfile from context or fetched data
+  const vendor = vendorProfile || vendorData;
+  const vendorId = vendor?.id;
 
   // Redirect if not authenticated or not a vendor
   if (!isAuthenticated || !user || user.role !== 'vendor') {
@@ -83,17 +95,6 @@ const DashboardPage: React.FC = () => {
       </MainLayout>
     );
   }
-
-  // Fetch vendor data
-  const { data: vendorData } = useQuery({
-    queryKey: ['/api/vendors/user', user.id],
-    queryFn: () => getVendorByUserId(user.id),
-    enabled: !!user && user.role === 'vendor',
-  });
-
-  // Using vendorProfile from context or fetched data
-  const vendor = vendorProfile || vendorData;
-  const vendorId = vendor?.id;
 
   // Fetch services, bookings, and reviews
   const { data: services, isLoading: servicesLoading } = useQuery({

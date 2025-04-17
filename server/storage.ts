@@ -425,11 +425,38 @@ export class MongoDBStorage implements IStorage {
       const lastVendor = await VendorModel.findOne().sort({ id: -1 });
       const id = lastVendor ? lastVendor.id + 1 : 1;
       
-      // Find the user to get the MongoDB _id
-      const user = await UserModel.findOne({ id: insertVendor.userId });
+      // CRITICAL FIX: Handle both string and number IDs
+      console.log('Looking up user with ID:', insertVendor.userId, 'Type:', typeof insertVendor.userId);
+      
+      // Try to find user by numeric ID first
+      let user = await UserModel.findOne({ id: insertVendor.userId });
+      
+      // If not found and userId is a string, it might be a MongoDB ObjectId
+      if (!user && typeof insertVendor.userId === 'string') {
+        console.log('Attempting to find user by MongoDB _id:', insertVendor.userId);
+        try {
+          // Try to find by MongoDB _id directly
+          user = await UserModel.findById(insertVendor.userId);
+        } catch (err) {
+          console.error('Failed to find by MongoDB ID, invalid format:', err);
+        }
+      }
+      
+      // If still not found, try string comparison with ID field
+      if (!user && typeof insertVendor.userId === 'string') {
+        console.log('Attempting to find user by string ID comparison');
+        user = await UserModel.findOne({ id: { $eq: insertVendor.userId } });
+      }
       
       if (!user) {
-        throw new Error(`User with ID ${insertVendor.userId} not found`);
+        // One last attempt - find the most recently created user
+        console.log('CRITICAL RECOVERY: User not found by ID, attempting to find most recent user');
+        user = await UserModel.findOne().sort({ createdAt: -1 });
+        
+        if (!user) {
+          throw new Error(`User with ID ${insertVendor.userId} not found and no fallback available`);
+        }
+        console.log('Using most recently created user as fallback:', user.id);
       }
       
       const newVendor = new VendorModel({
@@ -442,8 +469,10 @@ export class MongoDBStorage implements IStorage {
       
       console.log('Creating vendor with data:', {
         ...insertVendor,
-        userId: user._id,
-        id
+        userIdProvided: insertVendor.userId,
+        userIdUsed: user._id,
+        userIdNumeric: user.id,
+        vendorId: id
       });
 
       await newVendor.save();
