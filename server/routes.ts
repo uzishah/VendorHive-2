@@ -30,10 +30,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.post('/api/auth/register', async (req, res, next) => {
     try {
-      console.log('Registration request body:', JSON.stringify(req.body, null, 2));
+      console.log('Registration request body:', req.body);
+      
+      // CRITICAL FIX: Force role to 'vendor' if vendor data is present
+      if (req.body.vendor) {
+        console.log('VENDOR DATA DETECTED - Setting role to "vendor" regardless of what was sent');
+        req.body.role = 'vendor';
+      }
+      
+      // Log the raw role from the request for debugging
+      console.log('USER ROLE FROM REQUEST:', {
+        rawRole: req.body.role,
+        isVendorSelected: req.body.role === 'vendor',
+        hasVendorData: !!req.body.vendor
+      });
       
       const userData = insertUserSchema.parse(req.body);
-      console.log('Parsed user data:', JSON.stringify(userData, null, 2));
+      console.log('Parsed user data:', userData);
       
       // Check if email already exists
       const existingUserByEmail = await storage.getUserByEmail(userData.email);
@@ -55,7 +68,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...userData,
         password: hashedPassword
       });
-      console.log('Created user:', JSON.stringify(user, null, 2));
+      console.log('Created user with role:', user.role);
       
       // If user is registering as a vendor, create vendor profile
       let vendorProfile = null;
@@ -65,12 +78,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         vendorInfo: req.body.vendor
       });
       
-      // For role 'vendor', vendor profile is required
+      // CRITICAL FIX: Verify role is correctly set to vendor and create vendor profile
       if (userData.role === 'vendor') {
         try {
+          // Create default vendor data if missing
           if (!req.body.vendor) {
-            console.warn('Missing vendor data for vendor role, providing default values');
-            // Create a default vendor profile to ensure the account works properly
+            console.log('Missing vendor data for vendor role, creating default data');
             req.body.vendor = {
               businessName: user.name + "'s Business",
               category: "General Services",
@@ -88,6 +101,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
               userId: user.id
             });
             console.log('Vendor profile created:', JSON.stringify(vendorProfile, null, 2));
+            
+            // CRITICAL FIX: Verify user still has vendor role
+            if (user.role !== 'vendor') {
+              console.log('Ensuring user role is vendor after profile creation');
+              const updatedUser = await storage.updateUser(user.id, { role: 'vendor' });
+              if (updatedUser) {
+                Object.assign(user, updatedUser); // Update the user object in-place
+              }
+            }
           } catch (parseError) {
             console.error('Error parsing vendor data:', parseError);
             // If validation fails, create a minimal valid vendor profile
@@ -104,6 +126,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Update the user role to 'user' since vendor creation failed
           await storage.updateUser(user.id, { role: 'user' });
           console.log('Changed user role to user due to vendor creation failure');
+        }
+      } else if (req.body.vendor) {
+        // If vendor data was included but role isn't vendor, fix this inconsistency
+        console.log('CRITICAL FIX: Vendor data provided but role is not vendor - updating role to vendor');
+        await storage.updateUser(user.id, { role: 'vendor' });
+        user.role = 'vendor'; // Update local object
+        
+        try {
+          const vendorData = insertVendorSchema.parse(req.body.vendor);
+          vendorProfile = await storage.createVendor({
+            ...vendorData,
+            userId: user.id
+          });
+          console.log('Vendor profile created after role fix:', JSON.stringify(vendorProfile, null, 2));
+        } catch (error) {
+          console.error('Error creating vendor profile after role fix:', error);
+          vendorProfile = await storage.createVendor({
+            businessName: user.name + "'s Business",
+            category: "General Services",
+            description: "A new vendor on VendorHive",
+            userId: user.id
+          });
         }
       }
       

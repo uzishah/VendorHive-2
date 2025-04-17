@@ -143,10 +143,19 @@ const AuthPage: React.FC = () => {
     });
     
     // If registering as vendor, include vendor data
-    if (isVendorRegistration && values.vendor) {
+    if (isVendorRegistration) {
       try {
         console.log('Submitting vendor registration with role:', userDataWithRole.role);
-        await registerUser(userDataWithRole, true, values.vendor);
+        
+        // Create default vendor data if not provided
+        const vendorData = values.vendor || {
+          businessName: userData.name + "'s Business",
+          category: "General Services",
+          description: "A new vendor on VendorHive"
+        };
+        
+        // Always pass isVendor=true to ensure proper handling
+        await registerUser(userDataWithRole, true, vendorData);
       } catch (error) {
         console.error("Vendor registration error:", error);
       }

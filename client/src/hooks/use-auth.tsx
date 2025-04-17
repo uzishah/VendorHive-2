@@ -167,22 +167,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     try {
-      // Force the role to be 'vendor' if isVendor is true, ensuring server receives correct role
+      // CRITICAL FIX: Always force role to be 'vendor' if isVendor flag is true
+      // This ensures the server receives the correct role regardless of what's in userData
       const registerData = {
         ...userData,
-        role: isVendor ? 'vendor' : 'user',
+        role: isVendor ? 'vendor' : 'user', // Override whatever role is in userData
       };
       
       console.log('Registration data being sent to server:', {
-        providedRole: userData.role,
-        finalRole: registerData.role,
+        originalRole: userData.role,
+        correctedRole: registerData.role,
         isVendorFlag: isVendor,
         hasVendorData: !!vendorData
       });
       
-      // Always include vendor data for vendor registrations
-      if (isVendor && vendorData) {
-        registerData.vendor = vendorData;
+      // CRITICAL FIX: Always include vendor data for vendor registrations
+      // This ensures vendor profile creation on the server
+      if (isVendor) {
+        // Use provided vendor data or create default data
+        registerData.vendor = vendorData || {
+          businessName: userData.name + "'s Business",
+          category: "General Services",
+          description: "A new vendor on VendorHive"
+        };
       }
       
       const response = await apiRequest('POST', '/api/auth/register', registerData);
