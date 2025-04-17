@@ -217,6 +217,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  app.get('/api/vendors/user/:userId', async (req, res, next) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+      
+      console.log(`Fetching vendor for user ID: ${userId}`);
+      const vendor = await storage.getVendorByUserId(userId);
+      if (!vendor) {
+        console.log(`No vendor found for user ID: ${userId}`);
+        return res.status(404).json({ message: 'Vendor not found for this user' });
+      }
+      
+      console.log(`Found vendor for user ID ${userId}:`, vendor);
+      res.json(vendor);
+    } catch (error) {
+      console.error(`Error fetching vendor for user:`, error);
+      next(error);
+    }
+  });
+  
   app.get('/api/vendors/:id', async (req, res, next) => {
     try {
       const vendorId = parseInt(req.params.id);

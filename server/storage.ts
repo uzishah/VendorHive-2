@@ -734,15 +734,37 @@ export class MongoDBStorage implements IStorage {
     };
   }
 
+  private async findUserIdFromObjectId(objectId: any): Promise<number | undefined> {
+    try {
+      // If it's already a number, return it directly
+      if (typeof objectId === 'number') return objectId;
+      
+      // If it's a MongoDB ObjectId, find the corresponding user
+      const user = await UserModel.findOne({ _id: objectId });
+      if (user) {
+        return user.id;
+      }
+      return undefined;
+    } catch (error) {
+      console.error('Error finding user ID from ObjectId:', error);
+      return undefined;
+    }
+  }
+
   private mongoVendorToVendor(mongoVendor: any): Vendor {
-    // When we get the userId as an ObjectId, we need to convert it to a number
-    // For this, we'll try to find the user by this ObjectId and get the numeric id
     let userId = mongoVendor.userId;
+    
+    // Convert ObjectId to a string if it's an object
+    if (typeof userId === 'object' && userId !== null) {
+      // If it's a MongoDB ObjectId, we'll use numerical userId in the response
+      // and find the corresponding user in the methods that need it
+      userId = mongoVendor.userIdNumber || userId.toString();
+    }
     
     // Return the standard structure with properties from schema
     return {
       id: mongoVendor.id,
-      userId: typeof userId === 'object' ? userId : userId, // Keep it as is for now
+      userId: userId,
       businessName: mongoVendor.businessName,
       category: mongoVendor.category,
       description: mongoVendor.description,
