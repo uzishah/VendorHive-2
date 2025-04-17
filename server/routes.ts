@@ -61,17 +61,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let vendorProfile = null;
       console.log('Checking vendor condition:', {
         isVendorRole: userData.role === 'vendor', 
-        hasVendorData: !!req.body.vendor
+        hasVendorData: !!req.body.vendor,
+        vendorInfo: req.body.vendor
       });
       
       if (userData.role === 'vendor' && req.body.vendor) {
-        console.log('Creating vendor profile with data:', JSON.stringify(req.body.vendor, null, 2));
-        const vendorData = insertVendorSchema.parse(req.body.vendor);
-        vendorProfile = await storage.createVendor({
-          ...vendorData,
-          userId: user.id
-        });
-        console.log('Vendor profile created:', JSON.stringify(vendorProfile, null, 2));
+        try {
+          console.log('Creating vendor profile with data:', JSON.stringify(req.body.vendor, null, 2));
+          console.log('User ID for vendor creation:', user.id, typeof user.id);
+          const vendorData = insertVendorSchema.parse(req.body.vendor);
+          vendorProfile = await storage.createVendor({
+            ...vendorData,
+            userId: user.id
+          });
+          console.log('Vendor profile created:', JSON.stringify(vendorProfile, null, 2));
+        } catch (vendorError) {
+          console.error('Error creating vendor profile:', vendorError);
+          // Continue with the registration process even if vendor creation fails
+          // We'll return the user without a vendor profile
+        }
       }
       
       // Generate JWT token
