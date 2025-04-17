@@ -201,12 +201,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: `Welcome to VendorHive, ${data.user.name}!`,
       });
       
-      // Redirect to appropriate dashboard based on user role and profile
-      if (data.user.role === 'vendor' && data.vendorProfile) {
+      // Redirect based on user type - always direct vendors to dashboard, users to home
+      if (data.user.role === 'vendor') {
         console.log('Redirecting to vendor dashboard');
         window.location.href = '/dashboard';
       } else {
-        console.log('Redirecting to home page');
+        console.log('Redirecting to user home page');
         window.location.href = '/';
       }
     } catch (error) {

@@ -135,13 +135,17 @@ const AuthPage: React.FC = () => {
     
     console.log('Registering with data:', { 
       userDataWithRole, 
-      isVendor: userType === 'vendor', 
+      isVendor: userType === 'vendor',
       vendorData: values.vendor 
     });
     
     // If registering as vendor, include vendor data
     if (userType === 'vendor' && values.vendor) {
-      await registerUser(userDataWithRole, true, values.vendor);
+      try {
+        await registerUser(userDataWithRole, true, values.vendor);
+      } catch (error) {
+        console.error("Vendor registration error:", error);
+      }
     } else {
       await registerUser(userDataWithRole, false);
     }
@@ -395,33 +399,74 @@ const AuthPage: React.FC = () => {
                           <FormField
                             control={registerForm.control}
                             name="vendor.category"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Category</FormLabel>
-                                <Select 
-                                  onValueChange={field.onChange} 
-                                  defaultValue={field.value}
-                                  value={field.value}
-                                >
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select a category" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="Event Planning">Event Planning</SelectItem>
-                                    <SelectItem value="Home Services">Home Services</SelectItem>
-                                    <SelectItem value="IT Services">IT Services</SelectItem>
-                                    <SelectItem value="Food & Catering">Food & Catering</SelectItem>
-                                    <SelectItem value="Health & Wellness">Health & Wellness</SelectItem>
-                                    <SelectItem value="Education & Training">Education & Training</SelectItem>
-                                    <SelectItem value="Photography">Photography</SelectItem>
-                                    <SelectItem value="Other">Other</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
+                            render={({ field }) => {
+                              const [isCustomCategory, setIsCustomCategory] = useState(false);
+                              return (
+                                <FormItem>
+                                  <FormLabel>Category</FormLabel>
+                                  {!isCustomCategory ? (
+                                    <>
+                                      <Select 
+                                        onValueChange={(value) => {
+                                          if (value === "custom") {
+                                            setIsCustomCategory(true);
+                                          } else {
+                                            field.onChange(value);
+                                          }
+                                        }} 
+                                        defaultValue={field.value}
+                                        value={field.value}
+                                      >
+                                        <FormControl>
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="Select a category" />
+                                          </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                          <SelectItem value="Event Planning">Event Planning</SelectItem>
+                                          <SelectItem value="Home Services">Home Services</SelectItem>
+                                          <SelectItem value="IT Services">IT Services</SelectItem>
+                                          <SelectItem value="Food & Catering">Food & Catering</SelectItem>
+                                          <SelectItem value="Health & Wellness">Health & Wellness</SelectItem>
+                                          <SelectItem value="Education & Training">Education & Training</SelectItem>
+                                          <SelectItem value="Photography">Photography</SelectItem>
+                                          <SelectItem value="custom">Enter Custom Category</SelectItem>
+                                          <SelectItem value="Other">Other</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      <div className="text-xs text-gray-500 mt-1">
+                                        Select from our categories or choose "Enter Custom Category" to add your own
+                                      </div>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <div className="flex items-center space-x-2">
+                                        <FormControl>
+                                          <Input 
+                                            placeholder="Enter your category" 
+                                            value={field.value} 
+                                            onChange={field.onChange}
+                                            className="flex-1"
+                                          />
+                                        </FormControl>
+                                        <Button 
+                                          type="button" 
+                                          variant="outline" 
+                                          size="sm"
+                                          onClick={() => setIsCustomCategory(false)}
+                                        >
+                                          Back to List
+                                        </Button>
+                                      </div>
+                                      <div className="text-xs text-gray-500 mt-1">
+                                        Enter your custom business category
+                                      </div>
+                                    </>
+                                  )}
+                                  <FormMessage />
+                                </FormItem>
+                              );
+                            }}
                           />
                           
                           <FormField
