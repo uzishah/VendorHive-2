@@ -60,62 +60,37 @@ const DashboardPage: React.FC = () => {
   const [isAddServiceModalOpen, setIsAddServiceModalOpen] = useState(false);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   
-  // CRITICAL FIX: Move all hook calls before the conditional return
-  // to maintain consistent hook ordering (React Hooks rule)
+  // CRITICAL FIX: Ensure all hooks are called before any conditional returns
+  // for consistent hook ordering (React Hooks rule)
   const { data: vendorData } = useQuery({
     queryKey: ['/api/vendors/user', user?.id],
     queryFn: () => user?.id ? getVendorByUserId(user.id) : null,
     enabled: !!user && user.role === 'vendor',
   });
   
-  // Using vendorProfile from context or fetched data
+  // Pre-declare all queries with proper dependency control to ensure consistent hook order
   const vendor = vendorProfile || vendorData;
   const vendorId = vendor?.id;
-
-  // Redirect if not authenticated or not a vendor
-  if (!isAuthenticated || !user || user.role !== 'vendor') {
-    return (
-      <MainLayout>
-        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 text-center">
-          <Card>
-            <CardContent className="pt-8 pb-8">
-              <h2 className="text-2xl font-bold mb-4">Vendor Access Required</h2>
-              <p className="text-gray-600 mb-6">
-                You need to be logged in as a vendor to access the dashboard.
-              </p>
-              <Button className="mr-4" asChild>
-                <a href="/auth?tab=login">Log In</a>
-              </Button>
-              <Button variant="outline" asChild>
-                <a href="/auth?tab=register">Register as Vendor</a>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </MainLayout>
-    );
-  }
-
-  // Fetch services, bookings, and reviews
+  
   const { data: services, isLoading: servicesLoading } = useQuery({
     queryKey: ['/api/vendors', vendorId, 'services'],
-    queryFn: () => getVendorServices(vendorId!),
-    enabled: !!vendorId,
+    queryFn: () => vendorId ? getVendorServices(vendorId) : Promise.resolve([]),
+    enabled: !!vendorId && isAuthenticated && !!user && user.role === 'vendor',
   });
 
   const { data: bookings, isLoading: bookingsLoading } = useQuery({
     queryKey: ['/api/bookings/vendor'],
     queryFn: getVendorBookings,
-    enabled: !!vendorId,
+    enabled: !!vendorId && isAuthenticated && !!user && user.role === 'vendor',
   });
 
   const { data: reviews, isLoading: reviewsLoading } = useQuery({
     queryKey: ['/api/vendors', vendorId, 'reviews'],
-    queryFn: () => getVendorReviews(vendorId!),
-    enabled: !!vendorId,
+    queryFn: () => vendorId ? getVendorReviews(vendorId) : Promise.resolve([]),
+    enabled: !!vendorId && isAuthenticated && !!user && user.role === 'vendor',
   });
-
-  // Service form
+  
+  // Service form - defined before conditional returns to maintain hook order
   const serviceForm = useForm<z.infer<typeof serviceSchema>>({
     resolver: zodResolver(serviceSchema),
     defaultValues: {
@@ -128,7 +103,7 @@ const DashboardPage: React.FC = () => {
     },
   });
 
-  // Vendor profile form
+  // Vendor profile form - defined before conditional returns to maintain hook order
   const vendorProfileForm = useForm<z.infer<typeof vendorUpdateSchema>>({
     resolver: zodResolver(vendorUpdateSchema),
     defaultValues: {
@@ -137,19 +112,8 @@ const DashboardPage: React.FC = () => {
       description: vendor?.description || '',
     },
   });
-
-  // Update form values when vendor data changes
-  React.useEffect(() => {
-    if (vendor) {
-      vendorProfileForm.reset({
-        businessName: vendor.businessName,
-        category: vendor.category,
-        description: vendor.description,
-      });
-    }
-  }, [vendor, vendorProfileForm]);
-
-  // Create service mutation
+  
+  // Create service mutation - moved before conditional returns
   const createServiceMutation = useMutation({
     mutationFn: (serviceData: z.infer<typeof serviceSchema>) => {
       return createService({
@@ -175,7 +139,7 @@ const DashboardPage: React.FC = () => {
     },
   });
 
-  // Update booking status mutation
+  // Update booking status mutation - moved before conditional returns
   const updateBookingStatusMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: string }) => updateBookingStatus(id, status),
     onSuccess: () => {
@@ -193,6 +157,17 @@ const DashboardPage: React.FC = () => {
       });
     },
   });
+  
+  // Update form values when vendor data changes
+  React.useEffect(() => {
+    if (vendor) {
+      vendorProfileForm.reset({
+        businessName: vendor.businessName,
+        category: vendor.category,
+        description: vendor.description,
+      });
+    }
+  }, [vendor, vendorProfileForm]);
 
   // Handle service form submission
   const handleAddService = (values: z.infer<typeof serviceSchema>) => {
@@ -216,6 +191,30 @@ const DashboardPage: React.FC = () => {
       });
     }
   };
+  
+  // Redirect if not authenticated or not a vendor
+  if (!isAuthenticated || !user || user.role !== 'vendor') {
+    return (
+      <MainLayout>
+        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 text-center">
+          <Card>
+            <CardContent className="pt-8 pb-8">
+              <h2 className="text-2xl font-bold mb-4">Vendor Access Required</h2>
+              <p className="text-gray-600 mb-6">
+                You need to be logged in as a vendor to access the dashboard.
+              </p>
+              <Button className="mr-4" asChild>
+                <a href="/auth?tab=login">Log In</a>
+              </Button>
+              <Button variant="outline" asChild>
+                <a href="/auth?tab=register">Register as Vendor</a>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </MainLayout>
+    );
+  }
 
   // Calculate some stats
   const pendingBookings = bookings?.filter(b => b.status === 'pending')?.length || 0;
@@ -542,28 +541,25 @@ const DashboardPage: React.FC = () => {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle>My Services</CardTitle>
+                  <CardTitle>Your Services</CardTitle>
                   <CardDescription>
-                    Manage your services and offerings
+                    Manage the services you offer to customers
                   </CardDescription>
                 </div>
-                <Button 
-                  onClick={() => setIsAddServiceModalOpen(true)} 
-                  className="bg-primary hover:bg-primary-dark"
-                >
+                <Button onClick={() => setIsAddServiceModalOpen(true)}>
                   <PlusCircle className="mr-2 h-4 w-4" />
-                  Create Service
+                  Add Service
                 </Button>
               </CardHeader>
               <CardContent>
                 {servicesLoading ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {[1, 2, 3, 4].map((index) => (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {[1, 2, 3].map((index) => (
                       <div key={index} className="animate-pulse p-4 border rounded-md">
                         <div className="h-5 bg-gray-200 rounded w-1/2 mb-2"></div>
-                        <div className="h-4 bg-gray-200 rounded w-1/4 mb-1"></div>
-                        <div className="h-4 bg-gray-200 rounded w-full mb-4"></div>
-                        <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                        <div className="h-4 bg-gray-200 rounded w-1/3 mb-4"></div>
+                        <div className="h-24 bg-gray-200 rounded mb-2"></div>
+                        <div className="h-8 bg-gray-200 rounded w-1/3"></div>
                       </div>
                     ))}
                   </div>
@@ -572,45 +568,49 @@ const DashboardPage: React.FC = () => {
                     <FileText className="mx-auto h-12 w-12 text-gray-400" />
                     <h3 className="mt-2 text-sm font-medium text-gray-900">No services</h3>
                     <p className="mt-1 text-sm text-gray-500">
-                      You haven't added any services yet.
+                      Get started by creating a new service.
                     </p>
-                    <div className="mt-6">
-                      <Button onClick={() => setIsAddServiceModalOpen(true)}>
-                        Add a Service
-                      </Button>
-                    </div>
+                    <Button className="mt-4" onClick={() => setIsAddServiceModalOpen(true)}>
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Add Your First Service
+                    </Button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {services.map((service) => (
                       <Card key={service.id}>
-                        <CardContent className="p-4">
-                          <h3 className="font-semibold text-lg">{service.name}</h3>
-                          <div className="flex items-center mt-1 mb-2">
-                            <Clock className="h-4 w-4 text-gray-400 mr-1" />
-                            <span className="text-sm text-gray-500">
-                              {service.duration || 'Duration not specified'}
+                        <CardContent className="pt-6">
+                          <div className="mb-2 flex justify-between items-start">
+                            <div>
+                              <h3 className="font-medium text-lg">{service.name}</h3>
+                              <p className="text-sm text-primary font-medium">${service.price}</p>
+                              <div className="flex items-center mt-1">
+                                <Clock className="h-3 w-3 text-gray-500 mr-1" />
+                                <span className="text-xs text-gray-500">
+                                  {service.duration || 'Variable'} duration
+                                </span>
+                              </div>
+                            </div>
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${service.availability ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                              {service.availability ? 'Available' : 'Unavailable'}
                             </span>
                           </div>
-                          <p className="text-sm text-gray-600 mb-3">{service.description}</p>
-                          <div className="flex justify-between items-center">
-                            <p className="font-medium text-primary">{service.price}</p>
-                            <div className="flex items-center">
-                              <span className="text-sm text-gray-500 mr-2">Available</span>
-                              <Switch checked={service.availability} />
-                            </div>
+                          
+                          <p className="text-sm text-gray-600 mt-2 mb-3 line-clamp-3">
+                            {service.description}
+                          </p>
+                          
+                          <div className="flex justify-between mt-4">
+                            <Button variant="outline" size="sm">
+                              Edit
+                            </Button>
+                            <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">
+                              Delete
+                            </Button>
                           </div>
                         </CardContent>
                       </Card>
                     ))}
-                    
-                    <Card className="border-dashed border-2 hover:border-primary/50 cursor-pointer"
-                         onClick={() => setIsAddServiceModalOpen(true)}>
-                      <CardContent className="p-4 flex flex-col items-center justify-center h-full min-h-[180px]">
-                        <PlusCircle className="h-12 w-12 text-gray-300" />
-                        <p className="mt-4 text-gray-500 font-medium">Add New Service</p>
-                      </CardContent>
-                    </Card>
                   </div>
                 )}
               </CardContent>
@@ -627,19 +627,18 @@ const DashboardPage: React.FC = () => {
               </CardHeader>
               <CardContent>
                 {reviewsLoading ? (
-                  <div className="space-y-6">
+                  <div className="space-y-4">
                     {[1, 2, 3].map((index) => (
-                      <div key={index} className="animate-pulse">
+                      <div key={index} className="animate-pulse p-4 border rounded-md">
                         <div className="flex items-center mb-2">
-                          <div className="w-10 h-10 rounded-full bg-gray-200 mr-3"></div>
-                          <div className="flex-1">
-                            <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
-                            <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                          <div className="h-10 w-10 bg-gray-200 rounded-full mr-3"></div>
+                          <div>
+                            <div className="h-4 bg-gray-200 rounded w-24 mb-1"></div>
+                            <div className="h-3 bg-gray-200 rounded w-16"></div>
                           </div>
-                          <div className="w-20 h-4 bg-gray-200 rounded"></div>
                         </div>
-                        <div className="h-4 bg-gray-200 rounded w-full mt-2"></div>
-                        <div className="h-4 bg-gray-200 rounded w-2/3 mt-1"></div>
+                        <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
+                        <div className="h-16 bg-gray-200 rounded w-full"></div>
                       </div>
                     ))}
                   </div>
@@ -648,39 +647,50 @@ const DashboardPage: React.FC = () => {
                     <FileText className="mx-auto h-12 w-12 text-gray-400" />
                     <h3 className="mt-2 text-sm font-medium text-gray-900">No reviews yet</h3>
                     <p className="mt-1 text-sm text-gray-500">
-                      You haven't received any customer reviews yet.
+                      As you complete more bookings, customers will be able to leave reviews.
                     </p>
                   </div>
                 ) : (
                   <div className="space-y-6">
                     {reviews.map((review) => (
-                      <Card key={review.id}>
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-center">
-                              <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">
-                                {review.user.name.charAt(0)}
-                              </div>
-                              <div className="ml-4">
-                                <h4 className="font-semibold">{review.user.name}</h4>
-                                <p className="text-sm text-gray-500">
-                                  {new Date(review.createdAt).toLocaleDateString()}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center">
-                              {[...Array(5)].map((_, i) => (
-                                <span key={i} className={`text-lg ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`}>
-                                  <i className="fas fa-star"></i>
+                      <div key={review.id} className="p-4 border rounded-md">
+                        <div className="flex items-center mb-2">
+                          <div className="mr-3">
+                            {review.user.profileImage ? (
+                              <img 
+                                src={review.user.profileImage} 
+                                alt={review.user.name} 
+                                className="h-10 w-10 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                <span className="text-primary text-sm font-medium">
+                                  {review.user.name.charAt(0)}
                                 </span>
-                              ))}
-                            </div>
+                              </div>
+                            )}
                           </div>
-                          {review.comment && (
-                            <p className="mt-4 text-gray-700">{review.comment}</p>
-                          )}
-                        </CardContent>
-                      </Card>
+                          <div>
+                            <h4 className="text-sm font-medium">{review.user.name}</h4>
+                            <p className="text-xs text-gray-500">
+                              {new Date(review.createdAt).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center mb-2">
+                          {[...Array(5)].map((_, i) => (
+                            <span key={i} className={`h-4 w-4 ${i < review.rating ? 'text-yellow-400' : 'text-gray-200'}`}>★</span>
+                          ))}
+                          <span className="ml-2 text-sm font-medium">{review.rating}/5</span>
+                        </div>
+                        {review.comment && (
+                          <p className="text-sm text-gray-700">{review.comment}</p>
+                        )}
+                      </div>
                     ))}
                   </div>
                 )}
@@ -688,195 +698,197 @@ const DashboardPage: React.FC = () => {
             </Card>
           </TabsContent>
         </Tabs>
-        
-        {/* Add Service Modal */}
-        <Dialog open={isAddServiceModalOpen} onOpenChange={setIsAddServiceModalOpen}>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Add New Service</DialogTitle>
-              <DialogDescription>
-                Create a new service for your customers to book.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <Form {...serviceForm}>
-              <form onSubmit={serviceForm.handleSubmit(handleAddService)} className="space-y-4">
-                <FormField
-                  control={serviceForm.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Service Name</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="e.g. Basic Consultation" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={serviceForm.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          {...field} 
-                          placeholder="Describe what this service includes" 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={serviceForm.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          placeholder="e.g. Consulting, Photography, Design" 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={serviceForm.control}
-                    name="price"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Price</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="e.g. $99.99" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={serviceForm.control}
-                    name="duration"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Duration (optional)</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="e.g. 1 hour" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <FormField
-                  control={serviceForm.control}
-                  name="availability"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Available for Booking</FormLabel>
-                        <FormDescription>
-                          Make this service available for customers to book
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                
-                <DialogFooter>
-                  <Button type="submit" disabled={createServiceMutation.isPending}>
-                    {createServiceMutation.isPending ? "Creating..." : "Create Service"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
-        
-        {/* Edit Vendor Profile Modal */}
-        <Dialog open={isEditProfileModalOpen} onOpenChange={setIsEditProfileModalOpen}>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Edit Vendor Profile</DialogTitle>
-              <DialogDescription>
-                Update your business information and details.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <Form {...vendorProfileForm}>
-              <form onSubmit={vendorProfileForm.handleSubmit(handleUpdateVendorProfile)} className="space-y-4">
-                <FormField
-                  control={vendorProfileForm.control}
-                  name="businessName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Business Name</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={vendorProfileForm.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={vendorProfileForm.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Business Description</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          {...field} 
-                          placeholder="Describe your business and services" 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <DialogFooter>
-                  <Button type="submit">
-                    Save Changes
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
       </div>
+      
+      {/* Add Service Modal */}
+      <Dialog open={isAddServiceModalOpen} onOpenChange={setIsAddServiceModalOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Add New Service</DialogTitle>
+            <DialogDescription>
+              Create a new service to offer to your customers
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...serviceForm}>
+            <form onSubmit={serviceForm.handleSubmit(handleAddService)} className="space-y-4">
+              <FormField
+                control={serviceForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Service Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. Hair Cut, Website Design, Home Cleaning" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={serviceForm.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. Beauty, IT, Home Services" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={serviceForm.control}
+                  name="price"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Price</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. 49.99" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={serviceForm.control}
+                  name="duration"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Duration</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. 1 hour" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={serviceForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Describe your service in detail..." 
+                        className="min-h-[120px]" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={serviceForm.control}
+                name="availability"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Available for Booking</FormLabel>
+                      <FormDescription>
+                        Turn off to hide this service from customers
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsAddServiceModalOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={createServiceMutation.isPending}>
+                  {createServiceMutation.isPending ? 'Creating...' : 'Create Service'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Edit Profile Modal */}
+      <Dialog open={isEditProfileModalOpen} onOpenChange={setIsEditProfileModalOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Edit Business Profile</DialogTitle>
+            <DialogDescription>
+              Update your vendor profile information
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...vendorProfileForm}>
+            <form onSubmit={vendorProfileForm.handleSubmit(handleUpdateVendorProfile)} className="space-y-4">
+              <FormField
+                control={vendorProfileForm.control}
+                name="businessName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Business Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={vendorProfileForm.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Business Category</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={vendorProfileForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Business Description</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        className="min-h-[120px]" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsEditProfileModalOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  Save Changes
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 };
