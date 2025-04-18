@@ -496,16 +496,23 @@ export default function VendorServicesPage() {
 
   // Fetch services
   const { data: services = [], isLoading } = useQuery({
-    queryKey: ['/api/vendors', vendorProfile?.id, 'services'],
+    queryKey: ['/api/services/vendor'],
     queryFn: async () => {
-      if (!vendorProfile) return [];
-      const response = await fetch(`/api/vendors/${vendorProfile.id}/services`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch services');
+      try {
+        // Use API Request helper for consistent auth token handling
+        const response = await apiRequest('GET', '/api/services/vendor');
+        if (!response.ok) {
+          console.error('Failed to fetch services:', response.status);
+          return [];
+        }
+        return response.json();
+      } catch (error) {
+        console.error('Error fetching services:', error);
+        return [];
       }
-      return response.json();
     },
-    enabled: !!vendorProfile,
+    // Enable the query even if vendor profile isn't loaded yet
+    enabled: isAuthenticated && user?.role === 'vendor',
   });
 
   // Create service mutation
@@ -534,7 +541,7 @@ export default function VendorServicesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['/api/vendors', vendorProfile?.id, 'services'],
+        queryKey: ['/api/services/vendor'],
       });
       setServiceFormOpen(false);
       toast({
@@ -570,7 +577,7 @@ export default function VendorServicesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['/api/vendors', vendorProfile?.id, 'services'],
+        queryKey: ['/api/services/vendor'],
       });
       setServiceFormOpen(false);
       setEditingService(null);
@@ -605,7 +612,7 @@ export default function VendorServicesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['/api/vendors', vendorProfile?.id, 'services'],
+        queryKey: ['/api/services/vendor'],
       });
       setConfirmDeleteId(null);
       toast({
