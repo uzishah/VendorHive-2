@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { repairVendorProfile as apiRepairVendorProfile } from '@/services/api';
 
 interface User {
   id: number;
@@ -37,6 +38,7 @@ interface AuthContextType {
   logout: () => void;
   updateProfile: (userData: Partial<User>) => Promise<void>;
   updateVendorProfile: (vendorData: Partial<VendorProfile>) => Promise<void>;
+  repairVendorProfile: () => Promise<VendorProfile | null>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -50,6 +52,7 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
   updateProfile: async () => {},
   updateVendorProfile: async () => {},
+  repairVendorProfile: async () => null,
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -361,6 +364,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
     }
   };
+  
+  // Special function to repair or create a vendor profile when missing
+  const repairVendorProfile = async (): Promise<VendorProfile | null> => {
+    if (!token || !user || user.role !== 'vendor') {
+      toast({
+        title: 'Authentication error',
+        description: 'Vendor authorization required',
+        variant: 'destructive',
+      });
+      return null;
+    }
+    
+    setIsLoading(true);
+    console.log('Attempting to repair vendor profile for user:', user.id, user.username);
+    
+    try {
+      // Use the repair API endpoint
+      const result = await apiRepairVendorProfile();
+      
+      if (result.vendor) {
+        // Update local state with the new vendor profile
+        setVendorProfile(result.vendor);
+        
+        // Update localStorage
+        localStorage.setItem('vendorProfile', JSON.stringify(result.vendor));
+        
+        toast({
+          title: result.message || 'Vendor profile created',
+          description: 'Your vendor profile has been successfully created/repaired.',
+        });
+        
+        return result.vendor;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Vendor profile repair error:', error);
+      toast({
+        title: 'Repair failed',
+        description: error instanceof Error ? error.message : 'Could not repair vendor profile',
+        variant: 'destructive',
+      });
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <AuthContext.Provider value={{ 
@@ -373,7 +423,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       register, 
       logout,
       updateProfile,
-      updateVendorProfile
+      updateVendorProfile,
+      repairVendorProfile
     }}>
       {children}
     </AuthContext.Provider>

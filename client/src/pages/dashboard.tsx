@@ -54,7 +54,7 @@ const vendorUpdateSchema = z.object({
 });
 
 const DashboardPage: React.FC = () => {
-  const { user, isAuthenticated, vendorProfile, updateVendorProfile } = useAuth();
+  const { user, isAuthenticated, vendorProfile, updateVendorProfile, repairVendorProfile } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isAddServiceModalOpen, setIsAddServiceModalOpen] = useState(false);
@@ -243,8 +243,24 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
         
+        {/* Call-to-action banner for repairing/creating vendor profile when missing */}
+        {!vendorProfile && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8 text-center">
+            <h2 className="text-xl font-semibold text-yellow-800 mb-2">Vendor Profile Missing</h2>
+            <p className="text-yellow-600 mb-4">Your vendor profile needs to be created before you can add services</p>
+            <Button 
+              onClick={() => repairVendorProfile()} 
+              size="lg" 
+              className="bg-yellow-600 hover:bg-yellow-700 text-white"
+            >
+              <span className="mr-2">🛠️</span>
+              Repair Vendor Profile
+            </Button>
+          </div>
+        )}
+        
         {/* Call-to-action banner for creating services */}
-        {(!services || services.length === 0) && (
+        {vendorProfile && (!services || services.length === 0) && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8 text-center">
             <h2 className="text-xl font-semibold text-blue-800 mb-2">Start offering services to your customers</h2>
             <p className="text-blue-600 mb-4">Add your services to start accepting bookings from customers</p>
