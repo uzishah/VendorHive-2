@@ -180,3 +180,18 @@ export const updateVendor = async (id: number, vendorData: Partial<Vendor>): Pro
   const response = await apiRequest('PUT', `/api/vendors/${id}`, vendorData);
   return response.json();
 };
+
+// Special function to repair/create vendor profile when it's missing
+export const repairVendorProfile = async (): Promise<{
+  message: string;
+  vendor: Vendor;
+}> => {
+  try {
+    const response = await apiRequest('POST', '/api/vendors/repair', {});
+    console.log('Vendor repair response:', response.status);
+    return response.json();
+  } catch (error) {
+    console.error('Vendor repair error:', error);
+    throw new Error('Failed to repair vendor profile: ' + (error instanceof Error ? error.message : String(error)));
+  }
+};
