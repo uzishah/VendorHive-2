@@ -393,48 +393,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Special endpoint to repair/create vendor profile
-  app.post('/api/vendors/repair', authenticateToken, authorizeRole(['vendor']), async (req, res, next) => {
-    try {
-      console.log('Attempting to repair vendor profile for user:', req.user.id, req.user.username);
-      
-      // Check if user has a vendor profile
-      const existingVendor = await storage.getVendorByUserId(req.user.id);
-      
-      if (existingVendor) {
-        console.log('Vendor profile already exists:', existingVendor);
-        return res.json({
-          message: 'Vendor profile already exists',
-          vendor: existingVendor
-        });
-      }
-      
-      // Get the next available vendor ID
-      const lastVendor = await VendorModel.findOne().sort({ id: -1 });
-      const vendorId = lastVendor ? lastVendor.id + 1 : 1;
-      
-      console.log(`Creating new vendor with explicitly set ID: ${vendorId}`);
-      
-      // Create a default vendor profile
-      const newVendor = await storage.createVendor({
-        id: vendorId, // Explicitly set the numeric ID
-        userId: req.user.id,
-        businessName: req.user.name ? `${req.user.name}'s Business` : 'New Business',
-        category: 'General Services',
-        description: 'A new vendor on VendorHive'
-      });
-      
-      console.log('Created vendor profile:', newVendor);
-      
-      res.status(201).json({
-        message: 'Vendor profile created successfully',
-        vendor: newVendor
-      });
-    } catch (error) {
-      console.error('Error repairing vendor profile:', error);
-      next(error);
-    }
-  });
+  // Removing repair endpoint as we'll handle vendor profile creation automatically during service creation
   
   app.get('/api/vendors/:id', async (req, res, next) => {
     try {
@@ -524,12 +483,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Create a default vendor profile
             // Get the next available vendor ID to ensure it's unique and valid
             const lastVendor = await VendorModel.findOne().sort({ id: -1 });
-            const vendorId = lastVendor ? lastVendor.id + 1 : 1;
+            const nextVendorId = lastVendor && !isNaN(lastVendor.id) ? Number(lastVendor.id) + 1 : 1;
             
-            console.log(`Creating new vendor with explicitly set ID: ${vendorId}`);
+            console.log(`Creating new vendor with explicitly set ID: ${nextVendorId}`);
             
             const newVendor = await storage.createVendor({
-              id: vendorId, // Explicitly set the numeric ID
+              // Explicitly set numeric ID and ensure it's a valid number
               userId: req.user.id,
               businessName: req.user.name ? `${req.user.name}'s Business` : 'New Business',
               category: 'General Services',

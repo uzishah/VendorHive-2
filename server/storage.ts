@@ -536,19 +536,18 @@ export class MongoDBStorage implements IStorage {
 
   async createVendor(insertVendor: InsertVendor): Promise<Vendor> {
     try {
-      // Ensure we have a valid numeric ID for the vendor (not NaN)
-      let id: number;
+      // Always get the next available vendor ID to avoid ID conflicts and NaN issues
+      const lastVendor = await VendorModel.findOne().sort({ id: -1 });
       
-      if (insertVendor.id && !isNaN(Number(insertVendor.id))) {
-        // If ID is provided and valid, use it
-        id = Number(insertVendor.id);
-        console.log(`Using provided vendor ID: ${id}`);
-      } else {
-        // Otherwise get the next available vendor ID
-        const lastVendor = await VendorModel.findOne().sort({ id: -1 });
-        id = lastVendor ? lastVendor.id + 1 : 1;
-        console.log(`Generated new vendor ID: ${id}`);
+      // Safely get the next ID, ensuring it's a valid number
+      let nextId = 1; // Default to 1 if no vendors exist
+      
+      if (lastVendor) {
+        const lastId = Number(lastVendor.id);
+        nextId = !isNaN(lastId) ? lastId + 1 : 1;
       }
+      
+      console.log(`Generated new vendor ID: ${nextId}`);
       
       // CRITICAL FIX: Handle both string and number IDs
       console.log('Looking up user with ID:', insertVendor.userId, 'Type:', typeof insertVendor.userId);
@@ -602,7 +601,7 @@ export class MongoDBStorage implements IStorage {
       const vendorData = {
         ...insertVendor,
         userId: user._id, // Use MongoDB ObjectId for the reference
-        id,
+        id: nextId, // Use the safely generated ID
         rating: 0,
         reviewCount: 0,
         services: insertVendor.services || [],
@@ -614,7 +613,7 @@ export class MongoDBStorage implements IStorage {
         userIdProvided: insertVendor.userId,
         userIdUsed: user._id,
         userIdNumeric: user.id,
-        vendorId: id
+        vendorId: nextId
       });
 
       const newVendor = new VendorModel(vendorData);
