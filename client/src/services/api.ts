@@ -82,11 +82,21 @@ export const getVendorById = async (id: number): Promise<{
     username: string;
     profileImage?: string;
   };
-  serviceList: Service[];
+  services: Service[];
   reviews: Review[];
 }> => {
   const response = await apiRequest('GET', `/api/vendors/${id}`);
-  return response.json();
+  const data = await response.json();
+
+  // Log the data for debugging
+  console.log("Vendor data from API:", data);
+  
+  // Ensure services and reviews are arrays
+  return {
+    ...data,
+    services: Array.isArray(data.services) ? data.services : [],
+    reviews: Array.isArray(data.reviews) ? data.reviews : []
+  };
 };
 
 // Service APIs

@@ -11,6 +11,8 @@ import UserProfilePage from "@/pages/user-profile";
 import DashboardPage from "@/pages/dashboard";
 import VendorServicesPage from "@/pages/vendor-services";
 import BookingsPage from "@/pages/bookings";
+import SettingsPage from "@/pages/settings";
+import ContactPage from "@/pages/contact";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -24,6 +26,8 @@ function Router() {
       <Route path="/dashboard" component={DashboardPage} />
       <Route path="/services" component={VendorServicesPage} />
       <Route path="/bookings" component={BookingsPage} />
+      <Route path="/settings" component={SettingsPage} />
+      <Route path="/contact" component={ContactPage} />
       <Route component={NotFound} />
     </Switch>
   );
