@@ -326,12 +326,18 @@ const VendorProfilePage: React.FC = () => {
                   
                   {(() => {
                     console.log("Rendering services tab with:", vendor.services);
-                    console.log("Services array type:", Array.isArray(vendor.services) ? "Is Array" : "Not Array");
-                    console.log("Services length:", vendor.services?.length);
+                    console.log("Separately fetched services:", vendorServices);
                     
-                    return vendor.services && vendor.services.length > 0 ? (
+                    // Combine both sources of services data with fallback
+                    const displayServices = vendorServices.length > 0 ? 
+                        vendorServices : 
+                        (vendor.services && Array.isArray(vendor.services) ? vendor.services : []);
+                    
+                    console.log("Final services data for rendering:", displayServices);
+                    
+                    return displayServices.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {vendor.services.map((service, index) => {
+                        {displayServices.map((service: any, index: number) => {
                           console.log(`Rendering service at index ${index}:`, service);
                           return (
                             <Card key={service.id} className="overflow-hidden">

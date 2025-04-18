@@ -101,7 +101,7 @@ export const getVendorById = async (id: number): Promise<{
   
   if (Array.isArray(data.services)) {
     console.log("Services count:", data.services.length);
-    data.services.forEach((service, index) => {
+    data.services.forEach((service: any, index: number) => {
       console.log(`Service ${index}:`, service);
     });
   }
