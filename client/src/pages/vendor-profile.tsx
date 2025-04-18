@@ -45,7 +45,16 @@ const VendorProfilePage: React.FC = () => {
   // Fetch vendor details
   const { data: vendor, isLoading: vendorLoading } = useQuery({
     queryKey: ['/api/vendors', vendorId],
-    queryFn: () => getVendorById(vendorId),
+    queryFn: () => {
+      const result = getVendorById(vendorId);
+      result.then(data => {
+        console.log("Vendor profile loaded successfully:", data);
+        console.log("Services available:", data?.services);
+      }).catch(error => {
+        console.error("Error loading vendor profile:", error);
+      });
+      return result;
+    },
     enabled: !!vendorId,
   });
 
@@ -306,58 +315,67 @@ const VendorProfilePage: React.FC = () => {
                     <h3 className="text-2xl font-bold text-secondary-dark">Services Offered</h3>
                   </div>
                   
-                  {vendor.services && vendor.services.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {vendor.services.map((service) => (
-                        <Card key={service.id} className="overflow-hidden">
-                          {service.imageUrl && (
-                            <div className="w-full h-48 overflow-hidden">
-                              <img 
-                                src={service.imageUrl} 
-                                alt={service.name}
-                                className="w-full h-full object-cover" 
-                              />
-                            </div>
-                          )}
-                          <CardHeader className="p-4 pb-2">
-                            <CardTitle className="text-lg">{service.name}</CardTitle>
-                            <CardDescription>
-                              {service.duration && <span className="block text-sm">{service.duration}</span>}
-                            </CardDescription>
-                          </CardHeader>
-                          <CardContent className="p-4 pt-0">
-                            <p className="text-sm text-gray-600 mb-2">{service.description}</p>
-                            <p className="font-semibold text-primary">{service.price}</p>
-                            {service.location && (
-                              <p className="text-xs text-gray-500 mt-1">
-                                <MapPin className="inline h-3 w-3 mr-1" />
-                                {service.location}
-                              </p>
-                            )}
-                          </CardContent>
-                          <CardFooter className="p-4 pt-0 flex justify-end">
-                            {isAuthenticated && user && user.id !== vendor.userId && (
-                              <Button 
-                                variant="outline"
-                                onClick={() => {
-                                  setSelectedServiceId(service.id);
-                                  setIsBookingModalOpen(true);
-                                }}
-                              >
-                                Book Service
-                              </Button>
-                            )}
-                          </CardFooter>
-                        </Card>
-                      ))}
-                    </div>
-                  ) : (
-                    <Card>
-                      <CardContent className="p-6 text-center">
-                        <p className="text-gray-500">No services listed yet.</p>
-                      </CardContent>
-                    </Card>
-                  )}
+                  {(() => {
+                    console.log("Rendering services tab with:", vendor.services);
+                    console.log("Services array type:", Array.isArray(vendor.services) ? "Is Array" : "Not Array");
+                    console.log("Services length:", vendor.services?.length);
+                    
+                    return vendor.services && vendor.services.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {vendor.services.map((service, index) => {
+                          console.log(`Rendering service at index ${index}:`, service);
+                          return (
+                            <Card key={service.id} className="overflow-hidden">
+                              {service.imageUrl && (
+                                <div className="w-full h-48 overflow-hidden">
+                                  <img 
+                                    src={service.imageUrl} 
+                                    alt={service.name}
+                                    className="w-full h-full object-cover" 
+                                  />
+                                </div>
+                              )}
+                              <CardHeader className="p-4 pb-2">
+                                <CardTitle className="text-lg">{service.name}</CardTitle>
+                                <CardDescription>
+                                  {service.duration && <span className="block text-sm">{service.duration}</span>}
+                                </CardDescription>
+                              </CardHeader>
+                              <CardContent className="p-4 pt-0">
+                                <p className="text-sm text-gray-600 mb-2">{service.description}</p>
+                                <p className="font-semibold text-primary">{service.price}</p>
+                                {service.location && (
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    <MapPin className="inline h-3 w-3 mr-1" />
+                                    {service.location}
+                                  </p>
+                                )}
+                              </CardContent>
+                              <CardFooter className="p-4 pt-0 flex justify-end">
+                                {isAuthenticated && user && user.id !== vendor.userId && (
+                                  <Button 
+                                    variant="outline"
+                                    onClick={() => {
+                                      setSelectedServiceId(service.id);
+                                      setIsBookingModalOpen(true);
+                                    }}
+                                  >
+                                    Book Service
+                                  </Button>
+                                )}
+                              </CardFooter>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <Card>
+                        <CardContent className="p-6 text-center">
+                          <p className="text-gray-500">No services listed yet.</p>
+                        </CardContent>
+                      </Card>
+                    );
+                  })()}
                 </div>
               </TabsContent>
               
