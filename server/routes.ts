@@ -466,10 +466,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Service routes
   app.post('/api/services', authenticateToken, authorizeRole(['vendor']), async (req, res, next) => {
     try {
+      console.log('Request to create service from user:', req.user.id, req.user.username);
+
       // Get vendor by user ID first (to ensure user is a vendor and get the vendorId)
+      // Pass the MongoDB ObjectId string directly if that's what we have
       const vendor = await storage.getVendorByUserId(req.user.id);
+      
       if (!vendor) {
-        return res.status(404).json({ message: 'Vendor profile not found' });
+        console.log('No vendor profile found for user ID:', req.user.id);
+        
+        // Create a vendor profile if it doesn't exist but user has vendor role
+        if (req.user.role === 'vendor') {
+          console.log('User has vendor role but no vendor profile, creating one now...');
+          
+          try {
+            // Create a default vendor profile
+            const newVendor = await storage.createVendor({
+              userId: req.user.id,
+              businessName: req.user.name ? `${req.user.name}'s Business` : 'New Business',
+              category: 'General Services',
+              description: 'A new vendor on VendorHive'
+            });
+            
+            console.log('Created vendor profile automatically:', newVendor);
+            
+            // Continue with this new vendor profile
+            const serviceData = insertServiceSchema.parse({
+              ...req.body,
+              vendorId: Number(newVendor.id) // Force proper numeric type
+            });
+            
+            // Create service with the new vendor ID
+            const serviceId = await getNextServiceId();
+            const serviceDataToCreate = {
+              ...serviceData,
+              id: serviceId
+            };
+            
+            console.log('Creating service for new vendor with data:', JSON.stringify(serviceDataToCreate, null, 2));
+            
+            const service = await storage.createService(serviceDataToCreate);
+            console.log('Service created successfully with ID:', service.id);
+            return res.status(201).json(service);
+          } catch (error) {
+            const vendorCreationError = error as Error;
+            console.error('Failed to create vendor profile automatically:', vendorCreationError);
+            return res.status(404).json({ 
+              message: 'Vendor profile not found and automatic creation failed',
+              details: vendorCreationError.message 
+            });
+          }
+        } else {
+          return res.status(404).json({ message: 'Vendor profile not found and user is not a vendor' });
+        }
       }
       
       console.log(`Found vendor with ID: ${vendor.id} (type: ${typeof vendor.id})`);
@@ -509,6 +558,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         throw serviceError;
       }
     } catch (error) {
+      console.error('Service creation failed with error:', error);
       next(error);
     }
   });

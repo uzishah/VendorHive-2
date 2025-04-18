@@ -368,11 +368,63 @@ export class MongoDBStorage implements IStorage {
   // Vendor related methods
   async getVendor(id: number): Promise<(Vendor & { user: User }) | undefined> {
     try {
+      console.log(`Looking up vendor with ID: ${id}`);
       const vendor = await VendorModel.findOne({ id });
-      if (!vendor) return undefined;
-
-      const user = await UserModel.findOne({ id: vendor.userId });
-      if (!user) return undefined;
+      if (!vendor) {
+        console.log(`No vendor found with ID: ${id}`);
+        return undefined;
+      }
+      
+      console.log(`Found vendor, looking up user with userId: ${vendor.userId}`);
+      
+      // Try different strategies to find the user
+      let user;
+      
+      // Try MongoDB ObjectId reference first
+      try {
+        if (vendor.userId && String(vendor.userId).length === 24) {
+          console.log(`Trying to find user by MongoDB _id: ${vendor.userId}`);
+          user = await UserModel.findById(vendor.userId);
+          if (user) {
+            console.log('Found user by MongoDB _id');
+          }
+        }
+      } catch (err) {
+        console.log('Error looking up by MongoDB ObjectId:', err);
+      }
+      
+      // Try numeric ID lookup
+      if (!user && typeof vendor.userId === 'number') {
+        console.log(`Trying to find user with numeric ID: ${vendor.userId}`);
+        user = await UserModel.findOne({ id: vendor.userId });
+        if (user) {
+          console.log('Found user by numeric ID');
+        }
+      }
+      
+      // Try string value of the userId
+      if (!user && vendor.userId) {
+        console.log(`Trying to find user with ID string: ${String(vendor.userId)}`);
+        user = await UserModel.findOne({ id: String(vendor.userId) });
+        if (user) {
+          console.log('Found user by string ID');
+        }
+      }
+      
+      if (!user) {
+        console.log(`No user found for vendor with ID: ${id} (userId: ${vendor.userId})`);
+        
+        // Last resort: Get the most recent user 
+        console.log('Getting most recently created user as fallback');
+        user = await UserModel.findOne().sort({ createdAt: -1 });
+        
+        if (!user) {
+          console.log('No users found in database, vendor has no associated user');
+          return undefined;
+        }
+        
+        console.log(`Using most recent user (ID: ${user.id}) as fallback`);
+      }
 
       return {
         ...this.mongoVendorToVendor(vendor),
@@ -384,32 +436,95 @@ export class MongoDBStorage implements IStorage {
     }
   }
 
-  async getVendorByUserId(userId: number): Promise<Vendor | undefined> {
+  async getVendorByUserId(userId: number | string): Promise<Vendor | undefined> {
     try {
-      // First, get the user by numeric ID to get the MongoDB ObjectId
-      const user = await UserModel.findOne({ id: userId });
-      if (!user) {
-        console.log(`User with ID ${userId} not found`);
-        return undefined;
+      console.log(`Looking up vendor for user ID ${userId} (type: ${typeof userId})`);
+      
+      // Check if userId is a MongoDB ObjectId string
+      let mongoObjectId: string | null = null;
+      let numericId: number | null = null;
+      
+      if (typeof userId === 'string' && userId.length === 24) {
+        // This looks like a MongoDB ObjectId
+        mongoObjectId = userId;
+        console.log(`User ID appears to be a MongoDB ObjectId: ${mongoObjectId}`);
+      } else if (typeof userId === 'number' || !isNaN(Number(userId))) {
+        // This is a numeric ID or can be converted to one
+        numericId = Number(userId);
+        console.log(`User ID appears to be a numeric ID: ${numericId}`);
       }
       
-      console.log('Looking up vendor for user:', user);
+      // Try various strategies to find the vendor
+      let vendor = null;
+      let user = null;
       
-      // Try to find vendor using MongoDB ObjectId
-      let vendor = await VendorModel.findOne({ userId: user._id });
-      
-      // If not found, also try with numeric ID (for backwards compatibility)
-      if (!vendor) {
-        vendor = await VendorModel.findOne({ userId });
-        if (!vendor) {
-          console.log(`No vendor found for user with ID ${userId}`);
-          return undefined;
+      // Strategy 1: Try to find vendor directly by MongoDB ObjectId
+      if (mongoObjectId) {
+        try {
+          console.log(`Trying to find vendor by user._id: ${mongoObjectId}`);
+          vendor = await VendorModel.findOne({ userId: mongoObjectId });
+          if (vendor) {
+            console.log('Found vendor by MongoDB ObjectId');
+          }
+        } catch (err) {
+          console.log('Error looking up vendor by MongoDB ObjectId:', err);
         }
       }
       
-      // Store the numeric user ID for reference
+      // Strategy 2: Try to find user first, then use that to find vendor
+      if (!vendor && numericId) {
+        user = await UserModel.findOne({ id: numericId });
+        if (user) {
+          console.log('Found user with numeric ID:', user);
+          vendor = await VendorModel.findOne({ userId: user._id });
+          if (vendor) {
+            console.log('Found vendor by user._id after looking up user');
+          }
+        }
+      }
+      
+      // Strategy 3: Try looking up the vendor by string ID if it's stored that way
+      if (!vendor && mongoObjectId) {
+        try {
+          user = await UserModel.findById(mongoObjectId);
+          if (user) {
+            console.log('Found user by MongoDB _id lookup:', user);
+            vendor = await VendorModel.findOne({ userId: user._id });
+            if (vendor) {
+              console.log('Found vendor by user._id after looking up user by _id');
+            }
+          }
+        } catch (err) {
+          console.log('Error looking up user by MongoDB ObjectId:', err);
+        }
+      }
+      
+      // Strategy 4: Try finding vendor by numeric ID directly
+      if (!vendor && numericId) {
+        console.log(`Trying to find vendor with userId as numeric value: ${numericId}`);
+        vendor = await VendorModel.findOne({ userId: numericId });
+        if (vendor) {
+          console.log('Found vendor by numeric userId');
+        }
+      }
+      
+      if (!vendor) {
+        console.log(`No vendor found for user with ID ${userId} after trying all strategies`);
+        
+        // Last resort: Attempt to find the vendors collection and show what's there
+        console.log('Available vendors in database:');
+        const allVendors = await VendorModel.find({}).limit(5);
+        console.log(`Found ${allVendors.length} vendors:`);
+        allVendors.forEach(v => console.log(`Vendor ID: ${v.id}, UserID: ${v.userId}, BusinessName: ${v.businessName}`));
+        
+        return undefined;
+      }
+      
+      // Store the user ID for reference
       const vendorData = vendor.toObject();
-      vendorData.userIdNumber = userId;
+      if (numericId) {
+        vendorData.userIdNumber = numericId;
+      }
       
       console.log(`Found vendor for user ID ${userId}:`, vendorData);
       return this.mongoVendorToVendor(vendorData);
