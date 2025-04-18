@@ -54,6 +54,18 @@ const VendorProfilePage: React.FC = () => {
     },
     enabled: !!vendorId,
   });
+  
+  // Fetch vendor services separately to ensure we always have the latest data
+  const { data: vendorServices = [] } = useQuery({
+    queryKey: ['/api/vendors', vendorId, 'services'],
+    queryFn: async () => {
+      console.log(`Fetching services for vendor ID: ${vendorId}`);
+      const services = await getVendorServices(vendorId);
+      console.log("Services fetched separately:", services);
+      return services;
+    },
+    enabled: !!vendorId,
+  });
 
   // Booking form setup
   const bookingForm = useForm<z.infer<typeof bookingSchema>>({
