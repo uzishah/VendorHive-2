@@ -73,10 +73,10 @@ const vendorSchema = new mongoose.Schema({
     required: true, 
     unique: true,
     validate: {
-      validator: function(v) {
+      validator: function(v: number): boolean {
         return !isNaN(v) && v > 0;
       },
-      message: props => `${props.value} is not a valid positive numeric ID!`
+      message: (props: any) => `${props.value} is not a valid positive numeric ID!`
     } 
   } // Numeric ID field for internal references
 });
@@ -112,33 +112,81 @@ const serviceSchema = new mongoose.Schema({
     required: true, 
     unique: true,
     validate: {
-      validator: function(v) {
+      validator: function(v: number): boolean {
         return !isNaN(v) && v > 0;
       },
-      message: props => `${props.value} is not a valid positive numeric ID!`
+      message: (props: any) => `${props.value} is not a valid positive numeric ID!`
     }
   } // Numeric ID field for internal references
 });
 
 const bookingSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  vendorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor', required: true },
-  serviceId: { type: mongoose.Schema.Types.ObjectId, ref: 'Service' },
+  vendorId: { 
+    type: Number, 
+    required: true,
+    validate: {
+      validator: function(v: number): boolean {
+        return !isNaN(v) && v > 0;
+      },
+      message: (props: any) => `${props.value} is not a valid vendor ID!`
+    }
+  },
+  serviceId: { 
+    type: Number,
+    validate: {
+      validator: function(v: number): boolean {
+        return !isNaN(v) && v > 0;
+      },
+      message: (props: any) => `${props.value} is not a valid service ID!`
+    }
+  },
   date: { type: Date, required: true },
   status: { 
     type: String, 
     enum: ['pending', 'confirmed', 'completed', 'cancelled'], 
     default: 'pending' 
   },
-  notes: String
+  notes: String,
+  id: { 
+    type: Number, 
+    required: true, 
+    unique: true,
+    validate: {
+      validator: function(v) {
+        return !isNaN(v) && v > 0;
+      },
+      message: props => `${props.value} is not a valid positive numeric ID!`
+    }
+  }
 });
 
 const reviewSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  vendorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor', required: true },
+  vendorId: { 
+    type: Number, 
+    required: true,
+    validate: {
+      validator: function(v: number): boolean {
+        return !isNaN(v) && v > 0;
+      },
+      message: (props: any) => `${props.value} is not a valid vendor ID!`
+    }
+  },
   rating: { type: Number, required: true },
   comment: String,
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  id: { 
+    type: Number, 
+    required: true, 
+    unique: true,
+    validate: {
+      validator: function(v) {
+        return !isNaN(v) && v > 0;
+      },
+      message: props => `${props.value} is not a valid positive numeric ID!`
+    }
+  }
 });
 
 // Only define the models if they don't already exist
