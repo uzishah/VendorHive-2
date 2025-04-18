@@ -91,50 +91,51 @@ export const getVendorById = async (id: number): Promise<{
 
 // Service APIs
 export const getVendorServices = async (vendorId: number): Promise<Service[]> => {
-  const response = await fetch(`/api/vendors/${vendorId}/services`, {
-    credentials: 'include'
-  });
-  if (!response.ok) {
-    throw new Error('Failed to fetch vendor services');
+  try {
+    // Use apiRequest helper which handles auth token consistently
+    const response = await apiRequest('GET', `/api/vendors/${vendorId}/services`);
+    console.log('Get vendor services response:', response.status);
+    return response.json();
+  } catch (error) {
+    console.error('Get vendor services error:', error);
+    throw new Error('Failed to fetch vendor services: ' + (error instanceof Error ? error.message : String(error)));
   }
-  return response.json();
 };
 
 export const createService = async (serviceData: Omit<Service, 'id'>): Promise<Service> => {
-  const response = await fetch('/api/services', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify(serviceData)
-  });
-  if (!response.ok) {
-    throw new Error('Failed to create service');
+  try {
+    // Use apiRequest helper which handles auth token
+    const response = await apiRequest('POST', '/api/services', serviceData);
+    console.log('Service creation response:', response.status);
+    return response.json();
+  } catch (error) {
+    console.error('Service creation error:', error);
+    throw new Error('Failed to create service: ' + (error instanceof Error ? error.message : String(error)));
   }
-  return response.json();
 };
 
 export const updateService = async (id: number, serviceData: Partial<Service>): Promise<Service> => {
-  const response = await fetch(`/api/services/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify(serviceData)
-  });
-  if (!response.ok) {
-    throw new Error('Failed to update service');
+  try {
+    // Use apiRequest helper which handles auth token
+    const response = await apiRequest('PUT', `/api/services/${id}`, serviceData);
+    console.log('Service update response:', response.status);
+    return response.json();
+  } catch (error) {
+    console.error('Service update error:', error);
+    throw new Error('Failed to update service: ' + (error instanceof Error ? error.message : String(error)));
   }
-  return response.json();
 };
 
 export const deleteService = async (id: number): Promise<boolean> => {
-  const response = await fetch(`/api/services/${id}`, {
-    method: 'DELETE',
-    credentials: 'include'
-  });
-  if (!response.ok) {
-    throw new Error('Failed to delete service');
+  try {
+    // Use apiRequest helper which handles auth token
+    const response = await apiRequest('DELETE', `/api/services/${id}`);
+    console.log('Service delete response:', response.status);
+    return true;
+  } catch (error) {
+    console.error('Service delete error:', error);
+    throw new Error('Failed to delete service: ' + (error instanceof Error ? error.message : String(error)));
   }
-  return true;
 };
 
 // Booking APIs
