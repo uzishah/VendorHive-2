@@ -344,6 +344,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Profile image upload route
+  app.post('/api/users/profile-image', authenticateToken, upload.single('profileImage'), async (req, res, next) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+      }
+      
+      // The uploaded file details will be available in req.file thanks to multer/cloudinary
+      const imageUrl = req.file.path || (req.file as any).secure_url;
+      
+      if (!imageUrl) {
+        return res.status(500).json({ message: 'Failed to upload image' });
+      }
+      
+      // Update user with new profile image URL
+      const updatedUser = await storage.updateUser(req.user.id, { 
+        profileImage: imageUrl 
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Return the updated profile image URL
+      res.status(200).json({ profileImage: imageUrl });
+    } catch (error) {
+      console.error('Error uploading profile image:', error);
+      next(error);
+    }
+  });
+  
+  // Password update route
+  app.put('/api/users/password', authenticateToken, async (req, res, next) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: 'Current password and new password are required' });
+      }
+      
+      // Verify current password
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      const isPasswordValid = await comparePassword(currentPassword, user.password);
+      if (!isPasswordValid) {
+        return res.status(401).json({ message: 'Current password is incorrect' });
+      }
+      
+      // Hash new password
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // Update user
+      const updatedUser = await storage.updateUser(req.user.id, { 
+        password: hashedPassword 
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Return success without sensitive data
+      res.status(200).json({ message: 'Password updated successfully' });
+    } catch (error) {
+      next(error);
+    }
+  });
+  
   // Vendor Profile Repair endpoint is defined further below
   
   // Vendor routes
