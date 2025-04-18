@@ -94,15 +94,27 @@ export const getVendorById = async (id: number): Promise<{
   const response = await apiRequest('GET', `/api/vendors/${id}`);
   const data = await response.json();
 
-  // Log the data for debugging
+  // Enhanced debugging for the vendor data API response
   console.log("Vendor data from API:", data);
+  console.log("Raw services data:", data.services);
+  console.log("Is services an array?", Array.isArray(data.services));
   
-  // Ensure services and reviews are arrays
-  return {
+  if (Array.isArray(data.services)) {
+    console.log("Services count:", data.services.length);
+    data.services.forEach((service, index) => {
+      console.log(`Service ${index}:`, service);
+    });
+  }
+  
+  // Ensure services and reviews are arrays and properly formatted
+  const result = {
     ...data,
     services: Array.isArray(data.services) ? data.services : [],
     reviews: Array.isArray(data.reviews) ? data.reviews : []
   };
+  
+  console.log("Returning processed vendor data with services:", result.services);
+  return result;
 };
 
 // Service APIs

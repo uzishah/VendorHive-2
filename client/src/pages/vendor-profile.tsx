@@ -45,15 +45,12 @@ const VendorProfilePage: React.FC = () => {
   // Fetch vendor details
   const { data: vendor, isLoading: vendorLoading } = useQuery({
     queryKey: ['/api/vendors', vendorId],
-    queryFn: () => {
-      const result = getVendorById(vendorId);
-      result.then(data => {
-        console.log("Vendor profile loaded successfully:", data);
-        console.log("Services available:", data?.services);
-      }).catch(error => {
-        console.error("Error loading vendor profile:", error);
-      });
-      return result;
+    queryFn: async () => {
+      console.log(`Fetching vendor with ID: ${vendorId}`);
+      const data = await getVendorById(vendorId);
+      console.log("Vendor profile loaded successfully:", data);
+      console.log("Services in response:", data.services);
+      return data;
     },
     enabled: !!vendorId,
   });
