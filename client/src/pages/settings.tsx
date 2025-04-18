@@ -1,307 +1,284 @@
-import React, { useState, useRef } from 'react';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
+import React, { useState } from 'react';
+import { useLocation } from 'wouter';
 import { useMutation } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import MainLayout from '@/layouts/main-layout';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, Camera } from 'lucide-react';
-
-const profileFormSchema = z.object({
-  name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
-  username: z.string().min(3, { message: 'Username must be at least 3 characters' }),
-  email: z.string().email({ message: 'Please enter a valid email' }),
-  bio: z.string().optional(),
-  phone: z.string().optional(),
-  location: z.string().optional(),
-});
-
-const passwordFormSchema = z.object({
-  currentPassword: z.string().min(6, { message: 'Current password is required' }),
-  newPassword: z.string().min(6, { message: 'Password must be at least 6 characters' }),
-  confirmPassword: z.string().min(6, { message: 'Please confirm your password' }),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2, ImagePlus } from 'lucide-react';
 
 export default function SettingsPage() {
-  const { user, updateProfile, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, updateProfile, vendorProfile, updateVendorProfile } = useAuth();
   const { toast } = useToast();
-  const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [, navigate] = useLocation();
   
-  // Profile update form
-  const profileForm = useForm<z.infer<typeof profileFormSchema>>({
-    resolver: zodResolver(profileFormSchema),
-    defaultValues: {
-      name: user?.name || '',
-      username: user?.username || '',
-      email: user?.email || '',
-      bio: user?.bio || '',
-      phone: user?.phone || '',
-      location: user?.location || '',
-    },
+  const [profileData, setProfileData] = useState({
+    name: user?.name || '',
+    username: user?.username || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+    location: user?.location || '',
+    bio: user?.bio || '',
+    profileImage: user?.profileImage || '',
   });
-
-  // Password update form
-  const passwordForm = useForm<z.infer<typeof passwordFormSchema>>({
-    resolver: zodResolver(passwordFormSchema),
-    defaultValues: {
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: '',
-    },
+  
+  const [vendorData, setVendorData] = useState({
+    businessName: vendorProfile?.businessName || '',
+    category: vendorProfile?.category || '',
+    description: vendorProfile?.description || '',
   });
-
+  
+  const [uploading, setUploading] = useState(false);
+  
+  // Redirect if not authenticated
+  React.useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/auth');
+    }
+  }, [isAuthenticated, navigate]);
+  
   // Update profile mutation
-  const profileMutation = useMutation({
-    mutationFn: async (data: z.infer<typeof profileFormSchema>) => {
-      const response = await apiRequest('PUT', '/api/users/me', data);
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to update profile');
-      }
-      return response.json();
-    },
-    onSuccess: (data) => {
-      updateProfile(data);
-      toast({
-        title: 'Profile updated',
-        description: 'Your profile has been successfully updated.',
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: 'Update failed',
-        description: error.message,
-        variant: 'destructive',
-      });
-    },
-  });
-
-  // Password update mutation
-  const passwordMutation = useMutation({
-    mutationFn: async (data: { currentPassword: string; newPassword: string }) => {
-      const response = await apiRequest('PUT', '/api/users/password', data);
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to update password');
-      }
-      return response.json();
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: typeof profileData) => {
+      return updateProfile(data);
     },
     onSuccess: () => {
-      passwordForm.reset();
       toast({
-        title: 'Password updated',
-        description: 'Your password has been successfully updated.',
+        title: 'Success',
+        description: 'Profile updated successfully',
       });
     },
     onError: (error: Error) => {
       toast({
-        title: 'Update failed',
+        title: 'Error',
         description: error.message,
         variant: 'destructive',
       });
     },
   });
-
-  // Profile picture upload handler
-  const handleProfilePictureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  
+  // Update vendor profile mutation
+  const updateVendorMutation = useMutation({
+    mutationFn: async (data: typeof vendorData) => {
+      if (!vendorProfile) return null;
+      return updateVendorProfile(data);
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Success',
+        description: 'Vendor profile updated successfully',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+  
+  const handleProfileSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateProfileMutation.mutate(profileData);
+  };
+  
+  const handleVendorSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateVendorMutation.mutate(vendorData);
+  };
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setProfileData((prev) => ({ ...prev, [name]: value }));
+  };
+  
+  const handleVendorInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setVendorData((prev) => ({ ...prev, [name]: value }));
+  };
+  
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
+    
     try {
-      setIsUploading(true);
+      setUploading(true);
+      
       const formData = new FormData();
-      formData.append('profileImage', file);
-
-      const response = await fetch('/api/users/profile-image', {
+      formData.append('image', file);
+      
+      const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
         credentials: 'include',
       });
-
+      
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to upload profile picture');
+        throw new Error('Failed to upload image');
       }
-
+      
       const data = await response.json();
-      updateProfile({ profileImage: data.profileImage });
+      setProfileData((prev) => ({ ...prev, profileImage: data.imageUrl }));
+      
+      // Update profile with new image
+      updateProfileMutation.mutate({
+        ...profileData,
+        profileImage: data.imageUrl,
+      });
       
       toast({
-        title: 'Profile picture updated',
-        description: 'Your profile picture has been successfully updated.',
+        title: 'Success',
+        description: 'Profile image uploaded successfully',
       });
     } catch (error) {
       toast({
-        title: 'Upload failed',
-        description: error instanceof Error ? error.message : 'Failed to upload profile picture',
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to upload image',
         variant: 'destructive',
       });
     } finally {
-      setIsUploading(false);
+      setUploading(false);
     }
   };
-
-  const onProfileSubmit = (data: z.infer<typeof profileFormSchema>) => {
-    profileMutation.mutate(data);
-  };
-
-  const onPasswordSubmit = (data: z.infer<typeof passwordFormSchema>) => {
-    passwordMutation.mutate({
-      currentPassword: data.currentPassword,
-      newPassword: data.newPassword,
-    });
-  };
-
+  
   if (!isAuthenticated || !user) {
-    return null; // This could be replaced with a redirect to login page
+    return null;
   }
-
+  
   return (
     <MainLayout>
       <div className="container py-8">
-        <h1 className="text-3xl font-bold mb-6">Account Settings</h1>
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold">Settings</h1>
+            <p className="text-gray-500">Manage your account settings and preferences</p>
+          </div>
+        </div>
         
-        <Tabs defaultValue="general" className="space-y-6">
-          <TabsList className="w-full md:w-auto">
-            <TabsTrigger value="general">General</TabsTrigger>
-            <TabsTrigger value="security">Security</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="general">
-            <div className="grid gap-6 md:grid-cols-12">
-              {/* Profile Picture */}
-              <Card className="md:col-span-4">
-                <CardHeader>
-                  <CardTitle>Profile Picture</CardTitle>
-                  <CardDescription>
-                    Upload a profile picture to personalize your account.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col items-center">
-                  <div className="mb-4 relative">
-                    <Avatar className="h-32 w-32">
-                      <AvatarImage src={user.profileImage || undefined} alt={user.name} />
-                      <AvatarFallback className="text-2xl">{user.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="absolute bottom-0 right-0 rounded-full"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isUploading}
-                    >
-                      {isUploading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Camera className="h-4 w-4" />
-                      )}
-                    </Button>
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleProfilePictureChange}
-                      className="hidden"
-                      accept="image/*"
-                    />
-                  </div>
-                  <span className="text-sm text-gray-500">
-                    Click on the camera icon to upload a new profile picture
-                  </span>
-                </CardContent>
-              </Card>
+        <div className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-6">
+          <Card className="md:row-span-2">
+            <CardHeader>
+              <CardTitle>Profile</CardTitle>
+              <CardDescription>
+                Your profile information
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center">
+              <div className="mb-4 relative">
+                <Avatar className="h-32 w-32">
+                  <AvatarImage src={profileData.profileImage} alt={profileData.name} />
+                  <AvatarFallback className="text-2xl">
+                    {profileData.name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                
+                <div className="absolute bottom-1 right-1">
+                  <Input
+                    type="file"
+                    id="profile-image"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={uploading}
+                    className="hidden"
+                  />
+                  <Label
+                    htmlFor="profile-image"
+                    className="flex items-center justify-center h-8 w-8 rounded-full bg-primary text-white cursor-pointer shadow-md hover:bg-primary-dark"
+                  >
+                    {uploading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <ImagePlus className="h-4 w-4" />
+                    )}
+                  </Label>
+                </div>
+              </div>
               
-              {/* Profile Form */}
-              <Card className="md:col-span-8">
+              <h3 className="font-medium text-lg mb-1">{user.name}</h3>
+              <p className="text-gray-500 text-sm">@{user.username}</p>
+              
+              {user.role === 'vendor' && vendorProfile && (
+                <div className="mt-4 w-full">
+                  <Separator className="my-4" />
+                  <div className="text-center">
+                    <h4 className="font-medium text-sm uppercase text-gray-500 mb-2">Vendor Info</h4>
+                    <p className="font-medium">{vendorProfile.businessName}</p>
+                    <p className="text-sm text-gray-500">{vendorProfile.category}</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          
+          <Tabs defaultValue="account" className="flex-1">
+            <TabsList className="mb-6">
+              <TabsTrigger value="account">Account</TabsTrigger>
+              {user.role === 'vendor' && vendorProfile && (
+                <TabsTrigger value="business">Business Profile</TabsTrigger>
+              )}
+            </TabsList>
+            
+            <TabsContent value="account">
+              <Card>
                 <CardHeader>
-                  <CardTitle>Personal Information</CardTitle>
+                  <CardTitle>Account Information</CardTitle>
                   <CardDescription>
-                    Update your personal information and contact details.
+                    Update your personal information
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
-                    <div className="grid gap-4 md:grid-cols-2">
+                  <form onSubmit={handleProfileSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="name">Full Name</Label>
                         <Input
                           id="name"
-                          {...profileForm.register('name')}
-                          placeholder="John Doe"
+                          name="name"
+                          value={profileData.name}
+                          onChange={handleInputChange}
+                          placeholder="Your name"
                         />
-                        {profileForm.formState.errors.name && (
-                          <p className="text-sm text-red-500">
-                            {profileForm.formState.errors.name.message}
-                          </p>
-                        )}
                       </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="username">Username</Label>
                         <Input
                           id="username"
-                          {...profileForm.register('username')}
-                          placeholder="johndoe"
+                          name="username"
+                          value={profileData.username}
+                          onChange={handleInputChange}
+                          placeholder="Username"
                         />
-                        {profileForm.formState.errors.username && (
-                          <p className="text-sm text-red-500">
-                            {profileForm.formState.errors.username.message}
-                          </p>
-                        )}
                       </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        {...profileForm.register('email')}
-                        placeholder="john@example.com"
-                      />
-                      {profileForm.formState.errors.email && (
-                        <p className="text-sm text-red-500">
-                          {profileForm.formState.errors.email.message}
-                        </p>
-                      )}
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="bio">Bio</Label>
-                      <Textarea
-                        id="bio"
-                        {...profileForm.register('bio')}
-                        placeholder="Tell us a little about yourself"
-                        rows={3}
-                      />
-                    </div>
-                    
-                    <div className="grid gap-4 md:grid-cols-2">
+                      
                       <div className="space-y-2">
-                        <Label htmlFor="phone">Phone Number</Label>
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                          id="email"
+                          name="email"
+                          type="email"
+                          value={profileData.email}
+                          onChange={handleInputChange}
+                          placeholder="Your email"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="phone">Phone</Label>
                         <Input
                           id="phone"
-                          {...profileForm.register('phone')}
-                          placeholder="+1 (555) 123-4567"
+                          name="phone"
+                          value={profileData.phone}
+                          onChange={handleInputChange}
+                          placeholder="Phone number"
                         />
                       </div>
                       
@@ -309,97 +286,105 @@ export default function SettingsPage() {
                         <Label htmlFor="location">Location</Label>
                         <Input
                           id="location"
-                          {...profileForm.register('location')}
-                          placeholder="New York, USA"
+                          name="location"
+                          value={profileData.location}
+                          onChange={handleInputChange}
+                          placeholder="Your location"
                         />
                       </div>
                     </div>
                     
-                    <Button type="submit" className="w-full md:w-auto" disabled={profileMutation.isPending}>
-                      {profileMutation.isPending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Updating...
-                        </>
-                      ) : (
-                        'Save Changes'
+                    <div className="space-y-2">
+                      <Label htmlFor="bio">Bio</Label>
+                      <Textarea
+                        id="bio"
+                        name="bio"
+                        value={profileData.bio}
+                        onChange={handleInputChange}
+                        placeholder="Tell us about yourself"
+                        rows={4}
+                      />
+                    </div>
+                    
+                    <Button 
+                      type="submit" 
+                      className="mt-4"
+                      disabled={updateProfileMutation.isPending}
+                    >
+                      {updateProfileMutation.isPending && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       )}
+                      Save Changes
                     </Button>
                   </form>
                 </CardContent>
               </Card>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="security">
-            <Card>
-              <CardHeader>
-                <CardTitle>Password</CardTitle>
-                <CardDescription>
-                  Update your password to keep your account secure.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="currentPassword">Current Password</Label>
-                    <Input
-                      id="currentPassword"
-                      type="password"
-                      {...passwordForm.register('currentPassword')}
-                    />
-                    {passwordForm.formState.errors.currentPassword && (
-                      <p className="text-sm text-red-500">
-                        {passwordForm.formState.errors.currentPassword.message}
-                      </p>
-                    )}
-                  </div>
-                  
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="newPassword">New Password</Label>
-                      <Input
-                        id="newPassword"
-                        type="password"
-                        {...passwordForm.register('newPassword')}
-                      />
-                      {passwordForm.formState.errors.newPassword && (
-                        <p className="text-sm text-red-500">
-                          {passwordForm.formState.errors.newPassword.message}
-                        </p>
-                      )}
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">Confirm Password</Label>
-                      <Input
-                        id="confirmPassword"
-                        type="password"
-                        {...passwordForm.register('confirmPassword')}
-                      />
-                      {passwordForm.formState.errors.confirmPassword && (
-                        <p className="text-sm text-red-500">
-                          {passwordForm.formState.errors.confirmPassword.message}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <Button type="submit" className="w-full md:w-auto" disabled={passwordMutation.isPending}>
-                    {passwordMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Updating...
-                      </>
-                    ) : (
-                      'Update Password'
-                    )}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+            </TabsContent>
+            
+            {user.role === 'vendor' && vendorProfile && (
+              <TabsContent value="business">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Business Profile</CardTitle>
+                    <CardDescription>
+                      Update your business information
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <form onSubmit={handleVendorSubmit} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="businessName">Business Name</Label>
+                          <Input
+                            id="businessName"
+                            name="businessName"
+                            value={vendorData.businessName}
+                            onChange={handleVendorInputChange}
+                            placeholder="Your business name"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="category">Category</Label>
+                          <Input
+                            id="category"
+                            name="category"
+                            value={vendorData.category}
+                            onChange={handleVendorInputChange}
+                            placeholder="Business category"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="description">Business Description</Label>
+                        <Textarea
+                          id="description"
+                          name="description"
+                          value={vendorData.description}
+                          onChange={handleVendorInputChange}
+                          placeholder="Describe your business"
+                          rows={6}
+                        />
+                      </div>
+                      
+                      <Button 
+                        type="submit" 
+                        className="mt-4"
+                        disabled={updateVendorMutation.isPending}
+                      >
+                        {updateVendorMutation.isPending && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Update Business Profile
+                      </Button>
+                    </form>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            )}
+          </Tabs>
+        </div>
       </div>
     </MainLayout>
   );

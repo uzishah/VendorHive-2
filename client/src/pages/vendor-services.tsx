@@ -429,7 +429,21 @@ function ServiceForm({
                   className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-md cursor-pointer bg-gray-50 hover:bg-gray-100"
                 >
                   {uploading ? (
-                    <Loader2 className="h-6 w-6 animate-spin" />
+                    <div className="flex flex-col items-center">
+                      <Loader2 className="h-6 w-6 animate-spin mb-2" />
+                      <span className="text-sm text-gray-500">Uploading...</span>
+                    </div>
+                  ) : formData.imageUrl ? (
+                    <div className="flex flex-col items-center">
+                      <img 
+                        src={formData.imageUrl} 
+                        alt="Preview" 
+                        className="h-16 w-16 object-cover mb-2" 
+                      />
+                      <span className="text-sm text-gray-500">
+                        Click to change image
+                      </span>
+                    </div>
                   ) : (
                     <>
                       <ImagePlus className="h-8 w-8 text-gray-400" />

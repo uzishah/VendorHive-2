@@ -310,6 +310,15 @@ const VendorProfilePage: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {vendor.services.map((service) => (
                         <Card key={service.id} className="overflow-hidden">
+                          {service.imageUrl && (
+                            <div className="w-full h-48 overflow-hidden">
+                              <img 
+                                src={service.imageUrl} 
+                                alt={service.name}
+                                className="w-full h-full object-cover" 
+                              />
+                            </div>
+                          )}
                           <CardHeader className="p-4 pb-2">
                             <CardTitle className="text-lg">{service.name}</CardTitle>
                             <CardDescription>
@@ -319,6 +328,12 @@ const VendorProfilePage: React.FC = () => {
                           <CardContent className="p-4 pt-0">
                             <p className="text-sm text-gray-600 mb-2">{service.description}</p>
                             <p className="font-semibold text-primary">{service.price}</p>
+                            {service.location && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                <MapPin className="inline h-3 w-3 mr-1" />
+                                {service.location}
+                              </p>
+                            )}
                           </CardContent>
                           <CardFooter className="p-4 pt-0 flex justify-end">
                             {isAuthenticated && user && user.id !== vendor.userId && (

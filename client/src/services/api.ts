@@ -15,6 +15,9 @@ export interface Vendor {
     email: string;
     username: string;
     profileImage?: string;
+    phone?: string;
+    location?: string;
+    bio?: string;
   };
 }
 
@@ -81,6 +84,9 @@ export const getVendorById = async (id: number): Promise<{
     email: string;
     username: string;
     profileImage?: string;
+    phone?: string;
+    location?: string;
+    bio?: string;
   };
   services: Service[];
   reviews: Review[];
