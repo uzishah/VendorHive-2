@@ -570,6 +570,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get services for the current vendor (authenticated user)
+  app.get('/api/services/vendor', authenticateToken, authorizeRole(['vendor']), async (req, res, next) => {
+    try {
+      console.log('Fetching services for current vendor user:', req.user.id);
+      
+      // Get vendor profile by user ID
+      const vendor = await storage.getVendorByUserId(req.user.id);
+      
+      if (!vendor) {
+        console.log('No vendor profile found for user:', req.user.id);
+        return res.status(404).json({ message: 'Vendor profile not found' });
+      }
+      
+      // Get services for this vendor
+      const services = await storage.getServicesByVendorId(vendor.id);
+      console.log(`Found ${services.length} services for vendor ID ${vendor.id}`);
+      
+      return res.json(services);
+    } catch (error) {
+      console.error('Error fetching vendor services:', error);
+      next(error);
+    }
+  });
+  
   app.get('/api/vendors/:id/services', async (req, res, next) => {
     try {
       const vendorId = parseInt(req.params.id);
