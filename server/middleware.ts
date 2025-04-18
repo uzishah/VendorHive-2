@@ -12,22 +12,33 @@ declare global {
 
 // Authentication middleware to verify JWT token
 export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
-  // Get authorization header
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  
-  if (!token) {
-    return res.status(401).json({ message: 'Unauthorized: Missing token' });
+  try {
+    // Get authorization header
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    
+    console.log('Auth middleware received token:', token ? 'Yes (token present)' : 'No token');
+    console.log('Auth header:', authHeader);
+    
+    if (!token) {
+      console.log('Rejecting request: Missing token');
+      return res.status(401).json({ message: 'Unauthorized: Missing token' });
+    }
+    
+    const user = verifyToken(token);
+    
+    if (!user) {
+      console.log('Rejecting request: Invalid token');
+      return res.status(403).json({ message: 'Forbidden: Invalid or expired token' });
+    }
+    
+    console.log('Authentication successful for user:', user.id, user.username, 'Role:', user.role);
+    req.user = user;
+    next();
+  } catch (error) {
+    console.error('Authentication error:', error);
+    return res.status(500).json({ message: 'Authentication error occurred' });
   }
-  
-  const user = verifyToken(token);
-  
-  if (!user) {
-    return res.status(403).json({ message: 'Forbidden: Invalid or expired token' });
-  }
-  
-  req.user = user;
-  next();
 };
 
 // Role-based authorization middleware
