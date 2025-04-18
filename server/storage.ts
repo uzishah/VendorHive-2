@@ -536,24 +536,45 @@ export class MongoDBStorage implements IStorage {
 
   async createVendor(insertVendor: InsertVendor): Promise<Vendor> {
     try {
-      // Get the next available vendor ID
-      const lastVendor = await VendorModel.findOne().sort({ id: -1 });
-      const id = lastVendor ? lastVendor.id + 1 : 1;
+      // Ensure we have a valid numeric ID for the vendor (not NaN)
+      let id: number;
+      
+      if (insertVendor.id && !isNaN(Number(insertVendor.id))) {
+        // If ID is provided and valid, use it
+        id = Number(insertVendor.id);
+        console.log(`Using provided vendor ID: ${id}`);
+      } else {
+        // Otherwise get the next available vendor ID
+        const lastVendor = await VendorModel.findOne().sort({ id: -1 });
+        id = lastVendor ? lastVendor.id + 1 : 1;
+        console.log(`Generated new vendor ID: ${id}`);
+      }
       
       // CRITICAL FIX: Handle both string and number IDs
       console.log('Looking up user with ID:', insertVendor.userId, 'Type:', typeof insertVendor.userId);
       
-      // Try to find user by numeric ID first
-      let user = await UserModel.findOne({ id: insertVendor.userId });
+      let user = null;
       
-      // If not found and userId is a string, it might be a MongoDB ObjectId
-      if (!user && typeof insertVendor.userId === 'string') {
-        console.log('Attempting to find user by MongoDB _id:', insertVendor.userId);
+      // If userId is a MongoDB ObjectId string, try that first
+      if (typeof insertVendor.userId === 'string' && insertVendor.userId.length === 24) {
+        console.log('MongoDB ObjectId detected, looking up by _id directly');
         try {
-          // Try to find by MongoDB _id directly
           user = await UserModel.findById(insertVendor.userId);
+          if (user) {
+            console.log('Found user by MongoDB ObjectId:', user._id);
+          }
         } catch (err) {
-          console.error('Failed to find by MongoDB ID, invalid format:', err);
+          console.log('Error finding by MongoDB ObjectId:', err);
+        }
+      }
+      
+      // If not found and userId looks numeric, try by numeric ID
+      if (!user && (typeof insertVendor.userId === 'number' || !isNaN(Number(insertVendor.userId)))) {
+        const numericId = Number(insertVendor.userId);
+        console.log(`Trying to find user by numeric ID: ${numericId}`);
+        user = await UserModel.findOne({ id: numericId });
+        if (user) {
+          console.log('Found user by numeric ID:', user.id);
         }
       }
       
@@ -561,6 +582,9 @@ export class MongoDBStorage implements IStorage {
       if (!user && typeof insertVendor.userId === 'string') {
         console.log('Attempting to find user by string ID comparison');
         user = await UserModel.findOne({ id: { $eq: insertVendor.userId } });
+        if (user) {
+          console.log('Found user by string ID comparison:', user.id);
+        }
       }
       
       if (!user) {
@@ -574,23 +598,28 @@ export class MongoDBStorage implements IStorage {
         console.log('Using most recently created user as fallback:', user.id);
       }
       
-      const newVendor = new VendorModel({
+      // Ensure vendor data has required fields with default values if not provided
+      const vendorData = {
         ...insertVendor,
         userId: user._id, // Use MongoDB ObjectId for the reference
         id,
         rating: 0,
-        reviewCount: 0
-      });
+        reviewCount: 0,
+        services: insertVendor.services || [],
+        businessHours: insertVendor.businessHours || {}
+      };
       
       console.log('Creating vendor with data:', {
-        ...insertVendor,
+        ...vendorData,
         userIdProvided: insertVendor.userId,
         userIdUsed: user._id,
         userIdNumeric: user.id,
         vendorId: id
       });
 
+      const newVendor = new VendorModel(vendorData);
       await newVendor.save();
+      
       console.log('Vendor saved successfully:', newVendor);
       return this.mongoVendorToVendor(newVendor);
     } catch (error) {

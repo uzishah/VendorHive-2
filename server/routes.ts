@@ -481,7 +481,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           try {
             // Create a default vendor profile
+            // Get the next available vendor ID to ensure it's unique and valid
+            const lastVendor = await VendorModel.findOne().sort({ id: -1 });
+            const vendorId = lastVendor ? lastVendor.id + 1 : 1;
+            
+            console.log(`Creating new vendor with explicitly set ID: ${vendorId}`);
+            
             const newVendor = await storage.createVendor({
+              id: vendorId, // Explicitly set the numeric ID
               userId: req.user.id,
               businessName: req.user.name ? `${req.user.name}'s Business` : 'New Business',
               category: 'General Services',
