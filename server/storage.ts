@@ -572,13 +572,26 @@ export class MongoDBStorage implements IStorage {
       // Get the next available service ID
       const lastService = await ServiceModel.findOne().sort({ id: -1 });
       const id = lastService ? lastService.id + 1 : 1;
+      
+      console.log('Creating service with data:', JSON.stringify({
+        ...insertService,
+        id
+      }, null, 2));
+
+      // Ensure vendorId is a number
+      const vendorId = Number(insertService.vendorId);
+      if (isNaN(vendorId)) {
+        throw new Error(`Invalid vendor ID: ${insertService.vendorId}`);
+      }
 
       const newService = new ServiceModel({
         ...insertService,
+        vendorId, // Ensure numeric type
         id
       });
 
       await newService.save();
+      console.log('Service created successfully with ID:', id);
       return this.mongoServiceToService(newService);
     } catch (error) {
       console.error('Error creating service:', error);
@@ -637,12 +650,29 @@ export class MongoDBStorage implements IStorage {
       const lastBooking = await BookingModel.findOne().sort({ id: -1 });
       const id = lastBooking ? lastBooking.id + 1 : 1;
 
+      // Ensure vendorId and serviceId are numbers
+      const vendorId = Number(insertBooking.vendorId);
+      if (isNaN(vendorId)) {
+        throw new Error(`Invalid vendor ID: ${insertBooking.vendorId}`);
+      }
+
+      let serviceId = null;
+      if (insertBooking.serviceId) {
+        serviceId = Number(insertBooking.serviceId);
+        if (isNaN(serviceId)) {
+          throw new Error(`Invalid service ID: ${insertBooking.serviceId}`);
+        }
+      }
+
       const newBooking = new BookingModel({
         ...insertBooking,
+        vendorId, // Ensure numeric type
+        serviceId, // Ensure numeric type or null
         id
       });
 
       await newBooking.save();
+      console.log('Booking created successfully with ID:', id);
       return this.mongoBookingToBooking(newBooking);
     } catch (error) {
       console.error('Error creating booking:', error);
@@ -691,17 +721,25 @@ export class MongoDBStorage implements IStorage {
       const lastReview = await ReviewModel.findOne().sort({ id: -1 });
       const id = lastReview ? lastReview.id + 1 : 1;
 
+      // Ensure vendorId is a number
+      const vendorId = Number(insertReview.vendorId);
+      if (isNaN(vendorId)) {
+        throw new Error(`Invalid vendor ID: ${insertReview.vendorId}`);
+      }
+
       const newReview = new ReviewModel({
         ...insertReview,
+        vendorId, // Ensure numeric type
         id,
         createdAt: new Date()
       });
 
       await newReview.save();
+      console.log('Review created successfully with ID:', id);
 
       // Update vendor rating and review count
-      const vendorReviews = await this.getReviewsByVendorId(insertReview.vendorId);
-      const vendor = await VendorModel.findOne({ id: insertReview.vendorId });
+      const vendorReviews = await this.getReviewsByVendorId(vendorId);
+      const vendor = await VendorModel.findOne({ id: vendorId });
       
       if (vendor) {
         const reviewCount = vendorReviews.length + 1;
@@ -709,9 +747,10 @@ export class MongoDBStorage implements IStorage {
         const averageRating = Math.round(totalRating / reviewCount);
         
         await VendorModel.findOneAndUpdate(
-          { id: insertReview.vendorId },
+          { id: vendorId },
           { $set: { rating: averageRating, reviewCount } }
         );
+        console.log(`Updated vendor ${vendorId} rating to ${averageRating} (${reviewCount} reviews)`);
       }
 
       return this.mongoReviewToReview(newReview);

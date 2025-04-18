@@ -153,10 +153,10 @@ const bookingSchema = new mongoose.Schema({
     required: true, 
     unique: true,
     validate: {
-      validator: function(v) {
+      validator: function(v: number): boolean {
         return !isNaN(v) && v > 0;
       },
-      message: props => `${props.value} is not a valid positive numeric ID!`
+      message: (props: any) => `${props.value} is not a valid positive numeric ID!`
     }
   }
 });
@@ -181,10 +181,10 @@ const reviewSchema = new mongoose.Schema({
     required: true, 
     unique: true,
     validate: {
-      validator: function(v) {
+      validator: function(v: number): boolean {
         return !isNaN(v) && v > 0;
       },
-      message: props => `${props.value} is not a valid positive numeric ID!`
+      message: (props: any) => `${props.value} is not a valid positive numeric ID!`
     }
   }
 });
