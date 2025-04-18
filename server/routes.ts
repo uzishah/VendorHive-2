@@ -344,6 +344,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Vendor Profile Repair endpoint is defined further below
+  
   // Vendor routes
   app.get('/api/vendors', async (req, res, next) => {
     try {
