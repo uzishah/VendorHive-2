@@ -359,15 +359,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       console.log('Uploaded profile image to Cloudinary:', imageUrl);
+      console.log('Attempting to update user profile for user ID:', req.user.id);
+      console.log('User ID type:', typeof req.user.id);
+      
+      // MongoDB may be expecting the ID in a specific format
+      // Use string version of the user ID to ensure compatibility with MongoDB
+      const userId = req.user.id.toString();
+      console.log('Normalized user ID for update:', userId);
       
       // Update user with new profile image URL
-      const updatedUser = await storage.updateUser(req.user.id, { 
+      const updatedUser = await storage.updateUser(userId, { 
         profileImage: imageUrl 
       });
       
       if (!updatedUser) {
+        console.error('User not found when updating profile image for ID:', userId);
         return res.status(404).json({ message: 'User not found' });
       }
+      
+      console.log('Successfully updated user profile with new image URL');
       
       // Return the updated profile image URL
       res.status(200).json({ profileImage: imageUrl });
@@ -536,12 +546,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       console.log('Uploaded vendor cover image to Cloudinary:', imageUrl);
+      console.log('Attempting to update vendor profile for user ID:', req.user.id);
+      console.log('User ID type:', typeof req.user.id);
+      
+      // MongoDB may be expecting the ID in a specific format
+      // Use string version of the user ID to ensure compatibility with MongoDB
+      const userId = req.user.id.toString();
+      console.log('Normalized user ID for update:', userId);
       
       // Get vendor by user ID
-      const vendor = await storage.getVendorByUserId(req.user.id);
+      const vendor = await storage.getVendorByUserId(userId);
       if (!vendor) {
+        console.error('Vendor profile not found for user ID:', userId);
         return res.status(404).json({ message: 'Vendor profile not found' });
       }
+      
+      console.log('Found vendor for update, vendor ID:', vendor.id, 'type:', typeof vendor.id);
       
       // Update vendor with new cover image URL
       const updatedVendor = await storage.updateVendor(vendor.id, { 
@@ -549,8 +569,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       if (!updatedVendor) {
+        console.error('Vendor not found when updating cover image for vendor ID:', vendor.id);
         return res.status(404).json({ message: 'Vendor not found' });
       }
+      
+      console.log('Successfully updated vendor profile with new cover image URL');
       
       // Return the updated cover image URL
       res.status(200).json({ coverImage: imageUrl });
