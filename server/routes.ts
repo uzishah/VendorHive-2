@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { hashPassword, comparePassword, generateToken } from "./auth";
 import { authenticateToken, authorizeRole, authorizeVendor } from "./middleware";
 import { upload, uploadImage } from "./cloudinary";
-import { VendorModel, ServiceModel } from "./db";
+import { VendorModel, ServiceModel, UserModel } from "./db";
 import { 
   insertUserSchema, 
   insertVendorSchema, 
@@ -362,19 +362,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Attempting to update user profile for user ID:', req.user.id);
       console.log('User ID type:', typeof req.user.id);
       
-      // MongoDB may be expecting the ID in a specific format
-      // Use string version of the user ID to ensure compatibility with MongoDB
-      const userId = req.user.id.toString();
-      console.log('Normalized user ID for update:', userId);
-      
-      // Update user with new profile image URL
-      const updatedUser = await storage.updateUser(userId, { 
-        profileImage: imageUrl 
-      });
-      
-      if (!updatedUser) {
-        console.error('User not found when updating profile image for ID:', userId);
-        return res.status(404).json({ message: 'User not found' });
+      // We need to directly update the MongoDB document using the _id field
+      // Since we're using Mongoose, we can directly use findByIdAndUpdate
+      try {
+        // First try to find the user to verify they exist
+        const user = await UserModel.findById(req.user.id);
+        
+        if (!user) {
+          console.error(`User not found with MongoDB _id: ${req.user.id}`);
+          return res.status(404).json({ message: 'User not found' });
+        }
+        
+        console.log(`Found user with MongoDB _id: ${req.user.id}, updating profile image...`);
+        
+        // Update the user document directly
+        const updatedUser = await UserModel.findByIdAndUpdate(
+          req.user.id,
+          { $set: { profileImage: imageUrl } },
+          { new: true }
+        );
+        
+        if (!updatedUser) {
+          console.error('Failed to update user profile image:', req.user.id);
+          return res.status(500).json({ message: 'Failed to update user profile image' });
+        }
+        
+        console.log('Successfully updated user profile image for MongoDB _id:', req.user.id);
+      } catch (error) {
+        const updateError = error as Error;
+        console.error('Error updating user profile image:', updateError);
+        return res.status(500).json({ 
+          message: 'Error updating user profile image', 
+          error: updateError.message 
+        });
       }
       
       console.log('Successfully updated user profile with new image URL');
@@ -549,28 +569,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Attempting to update vendor profile for user ID:', req.user.id);
       console.log('User ID type:', typeof req.user.id);
       
-      // MongoDB may be expecting the ID in a specific format
-      // Use string version of the user ID to ensure compatibility with MongoDB
-      const userId = req.user.id.toString();
-      console.log('Normalized user ID for update:', userId);
-      
-      // Get vendor by user ID
-      const vendor = await storage.getVendorByUserId(userId);
-      if (!vendor) {
-        console.error('Vendor profile not found for user ID:', userId);
-        return res.status(404).json({ message: 'Vendor profile not found' });
-      }
-      
-      console.log('Found vendor for update, vendor ID:', vendor.id, 'type:', typeof vendor.id);
-      
-      // Update vendor with new cover image URL
-      const updatedVendor = await storage.updateVendor(vendor.id, { 
-        coverImage: imageUrl 
-      });
-      
-      if (!updatedVendor) {
-        console.error('Vendor not found when updating cover image for vendor ID:', vendor.id);
-        return res.status(404).json({ message: 'Vendor not found' });
+      try {
+        // First find the vendor document by userId (which is a MongoDB ObjectId)
+        const vendor = await VendorModel.findOne({ userId: req.user.id });
+        
+        if (!vendor) {
+          console.error(`Vendor not found with userId: ${req.user.id}`);
+          return res.status(404).json({ message: 'Vendor profile not found' });
+        }
+        
+        console.log(`Found vendor with ID: ${vendor.id}, updating cover image...`);
+        
+        // Update the vendor document directly using Mongoose
+        const updatedVendor = await VendorModel.findByIdAndUpdate(
+          vendor._id,
+          { $set: { coverImage: imageUrl } },
+          { new: true }
+        );
+        
+        if (!updatedVendor) {
+          console.error('Failed to update vendor cover image:', vendor._id);
+          return res.status(500).json({ message: 'Failed to update vendor cover image' });
+        }
+        
+        console.log('Successfully updated vendor cover image for vendor ID:', vendor.id);
+      } catch (error) {
+        const updateError = error as Error;
+        console.error('Error updating vendor cover image:', updateError);
+        return res.status(500).json({ 
+          message: 'Error updating vendor cover image', 
+          error: updateError.message 
+        });
       }
       
       console.log('Successfully updated vendor profile with new cover image URL');
