@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, ImagePlus } from 'lucide-react';
 
 export default function SettingsPage() {
-  const { user, isAuthenticated, updateProfile, vendorProfile, updateVendorProfile } = useAuth();
+  const { user, token, isAuthenticated, updateProfile, vendorProfile, updateVendorProfile } = useAuth();
   const { toast } = useToast();
   const [, navigate] = useLocation();
   
@@ -119,6 +119,9 @@ export default function SettingsPage() {
       
       const response = await fetch('/api/users/profile-image', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         body: formData,
         credentials: 'include',
       });
@@ -163,6 +166,9 @@ export default function SettingsPage() {
       
       const response = await fetch('/api/vendors/cover-image', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         body: formData,
         credentials: 'include',
       });
