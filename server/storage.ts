@@ -1105,6 +1105,7 @@ export class MongoDBStorage implements IStorage {
       description: mongoVendor.description,
       services: mongoVendor.services || null,
       businessHours: mongoVendor.businessHours || null,
+      coverImage: mongoVendor.coverImage || null,  // Include coverImage field
       rating: mongoVendor.rating || 0,
       reviewCount: mongoVendor.reviewCount || 0
     };
