@@ -20,6 +20,29 @@ import StarRating from '@/components/ui/star-rating';
 import { getVendorById, getVendorServices, createBooking, createReview } from '@/services/api';
 import { MapPin, Phone, Mail, FileText, Clock, Calendar as CalendarIcon } from 'lucide-react';
 
+interface Vendor {
+  id: number;
+  userId: number | string;
+  businessName: string;
+  category: string;
+  description: string;
+  businessHours?: Record<string, any>;
+  coverImage?: string;
+  rating: number;
+  reviewCount: number;
+  user: {
+    id: number | string;
+    name: string;
+    email: string;
+    username: string;
+    location?: string;
+    phone?: string;
+    profileImage?: string;
+  };
+  services: any[];
+  reviews: any[];
+}
+
 const bookingSchema = z.object({
   date: z.date({ required_error: "Please select a date for your booking" }),
   notes: z.string().optional(),
@@ -43,14 +66,14 @@ const VendorProfilePage: React.FC = () => {
   const vendorId = params?.id ? parseInt(params.id) : 0;
 
   // Fetch vendor details
-  const { data: vendor, isLoading: vendorLoading } = useQuery({
+  const { data: vendor, isLoading: vendorLoading } = useQuery<Vendor>({
     queryKey: ['/api/vendors', vendorId],
     queryFn: async () => {
       console.log(`Fetching vendor with ID: ${vendorId}`);
       const data = await getVendorById(vendorId);
       console.log("Vendor profile loaded successfully:", data);
       console.log("Services in response:", data.services);
-      return data;
+      return data as Vendor;
     },
     enabled: !!vendorId,
   });
