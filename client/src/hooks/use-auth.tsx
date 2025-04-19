@@ -23,6 +23,7 @@ interface VendorProfile {
   description: string;
   services?: string[];
   businessHours?: Record<string, any>;
+  coverImage?: string;
   rating: number;
   reviewCount: number;
 }

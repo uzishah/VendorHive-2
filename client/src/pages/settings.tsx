@@ -33,9 +33,11 @@ export default function SettingsPage() {
     businessName: vendorProfile?.businessName || '',
     category: vendorProfile?.category || '',
     description: vendorProfile?.description || '',
+    coverImage: vendorProfile?.coverImage || '',
   });
   
   const [uploading, setUploading] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
   
   // Redirect if not authenticated
   React.useEffect(() => {
@@ -113,9 +115,9 @@ export default function SettingsPage() {
       setUploading(true);
       
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append('profileImage', file);
       
-      const response = await fetch('/api/upload', {
+      const response = await fetch('/api/users/profile-image', {
         method: 'POST',
         body: formData,
         credentials: 'include',
@@ -126,12 +128,12 @@ export default function SettingsPage() {
       }
       
       const data = await response.json();
-      setProfileData((prev) => ({ ...prev, profileImage: data.imageUrl }));
+      setProfileData((prev) => ({ ...prev, profileImage: data.profileImage }));
       
       // Update profile with new image
       updateProfileMutation.mutate({
         ...profileData,
-        profileImage: data.imageUrl,
+        profileImage: data.profileImage,
       });
       
       toast({
@@ -146,6 +148,50 @@ export default function SettingsPage() {
       });
     } finally {
       setUploading(false);
+    }
+  };
+  
+  const handleCoverImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    try {
+      setUploadingCover(true);
+      
+      const formData = new FormData();
+      formData.append('coverImage', file);
+      
+      const response = await fetch('/api/vendors/cover-image', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload cover image');
+      }
+      
+      const data = await response.json();
+      setVendorData((prev) => ({ ...prev, coverImage: data.coverImage }));
+      
+      // Update vendor profile with new cover image
+      updateVendorMutation.mutate({
+        ...vendorData,
+        coverImage: data.coverImage,
+      });
+      
+      toast({
+        title: 'Success',
+        description: 'Cover image uploaded successfully',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to upload cover image',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploadingCover(false);
     }
   };
   
@@ -368,9 +414,52 @@ export default function SettingsPage() {
                         />
                       </div>
                       
+                      <div className="space-y-4 mt-4">
+                        <Label className="text-base font-medium">Business Cover Image</Label>
+                        
+                        <div className="flex flex-col space-y-4">
+                          {vendorData.coverImage && (
+                            <div className="w-full h-48 relative rounded-md overflow-hidden border">
+                              <img 
+                                src={vendorData.coverImage} 
+                                alt="Business Cover" 
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center">
+                            <Input
+                              type="file"
+                              id="cover-image"
+                              accept="image/*"
+                              onChange={handleCoverImageUpload}
+                              disabled={uploadingCover}
+                              className="hidden"
+                            />
+                            <Label
+                              htmlFor="cover-image"
+                              className="flex items-center justify-center py-2 px-4 rounded bg-primary text-white cursor-pointer hover:bg-primary-dark"
+                            >
+                              {uploadingCover ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Uploading...
+                                </>
+                              ) : (
+                                <>
+                                  <ImagePlus className="mr-2 h-4 w-4" />
+                                  {vendorData.coverImage ? 'Change Cover Image' : 'Upload Cover Image'}
+                                </>
+                              )}
+                            </Label>
+                          </div>
+                        </div>
+                      </div>
+                      
                       <Button 
                         type="submit" 
-                        className="mt-4"
+                        className="mt-6"
                         disabled={updateVendorMutation.isPending}
                       >
                         {updateVendorMutation.isPending && (

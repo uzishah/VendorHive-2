@@ -66,6 +66,7 @@ const vendorSchema = new mongoose.Schema({
   description: { type: String, required: true },
   services: [String],
   businessHours: Object,
+  coverImage: String,
   rating: { type: Number, default: 0 },
   reviewCount: { type: Number, default: 0 },
   id: { 

@@ -26,6 +26,7 @@ export const vendors = pgTable("vendors", {
   description: text("description").notNull(),
   services: text("services").array(),
   businessHours: jsonb("business_hours"),
+  coverImage: text("cover_image"),
   rating: integer("rating").default(0),
   reviewCount: integer("review_count").default(0),
 });

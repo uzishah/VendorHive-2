@@ -519,6 +519,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Vendor cover image upload route
+  app.post('/api/vendors/cover-image', authenticateToken, authorizeRole(['vendor']), upload.single('coverImage'), async (req, res, next) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+      }
+      
+      // The uploaded file details will be available in req.file thanks to multer/cloudinary
+      const imageUrl = req.file.path || (req.file as any).secure_url;
+      
+      if (!imageUrl) {
+        return res.status(500).json({ message: 'Failed to upload image' });
+      }
+      
+      // Get vendor by user ID
+      const vendor = await storage.getVendorByUserId(req.user.id);
+      if (!vendor) {
+        return res.status(404).json({ message: 'Vendor profile not found' });
+      }
+      
+      // Update vendor with new cover image URL
+      const updatedVendor = await storage.updateVendor(vendor.id, { 
+        coverImage: imageUrl 
+      });
+      
+      if (!updatedVendor) {
+        return res.status(404).json({ message: 'Vendor not found' });
+      }
+      
+      // Return the updated cover image URL
+      res.status(200).json({ coverImage: imageUrl });
+    } catch (error) {
+      console.error('Error uploading vendor cover image:', error);
+      next(error);
+    }
+  });
+  
   // Upload image route
   app.post('/api/upload', authenticateToken, upload.single('image'), async (req, res, next) => {
     try {
