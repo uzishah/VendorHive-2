@@ -209,11 +209,19 @@ const VendorProfilePage: React.FC = () => {
         {/* Vendor profile header */}
         <div className="bg-white shadow-md rounded-lg overflow-hidden mb-8">
           <div className="h-48 bg-gradient-to-r from-primary-light to-primary overflow-hidden">
-            <img
-              className="w-full h-full object-cover opacity-50"
-              src={`https://source.unsplash.com/featured/?${encodeURIComponent(vendor.category)}`}
-              alt={vendor.businessName}
-            />
+            {vendor.coverImage ? (
+              <img
+                className="w-full h-full object-cover"
+                src={vendor.coverImage}
+                alt={vendor.businessName}
+              />
+            ) : (
+              <img
+                className="w-full h-full object-cover opacity-50"
+                src={`https://source.unsplash.com/featured/?${encodeURIComponent(vendor.category)}`}
+                alt={vendor.businessName}
+              />
+            )}
           </div>
           
           <div className="px-6 py-4 relative">
