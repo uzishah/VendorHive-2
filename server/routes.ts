@@ -351,12 +351,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'No file uploaded' });
       }
       
-      // The uploaded file details will be available in req.file thanks to multer/cloudinary
-      const imageUrl = req.file.path || (req.file as any).secure_url;
+      // Use the helper function to upload to Cloudinary
+      const imageUrl = await uploadImage(req.file);
       
       if (!imageUrl) {
         return res.status(500).json({ message: 'Failed to upload image' });
       }
+      
+      console.log('Uploaded profile image to Cloudinary:', imageUrl);
       
       // Update user with new profile image URL
       const updatedUser = await storage.updateUser(req.user.id, { 
@@ -526,12 +528,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'No file uploaded' });
       }
       
-      // The uploaded file details will be available in req.file thanks to multer/cloudinary
-      const imageUrl = req.file.path || (req.file as any).secure_url;
+      // Use the helper function to upload to Cloudinary
+      const imageUrl = await uploadImage(req.file);
       
       if (!imageUrl) {
         return res.status(500).json({ message: 'Failed to upload image' });
       }
+      
+      console.log('Uploaded vendor cover image to Cloudinary:', imageUrl);
       
       // Get vendor by user ID
       const vendor = await storage.getVendorByUserId(req.user.id);
