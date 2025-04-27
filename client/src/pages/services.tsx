@@ -66,8 +66,8 @@ const ServicesPage: React.FC = () => {
       return false;
     }
     
-    // Filter by category if selected
-    if (selectedCategory && service.category !== selectedCategory) {
+    // Filter by category if selected (and not 'all')
+    if (selectedCategory && selectedCategory !== 'all' && service.category !== selectedCategory) {
       return false;
     }
     
