@@ -64,7 +64,7 @@ const SORT_OPTIONS = [
 const VendorsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSearch, setActiveSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [minRating, setMinRating] = useState<number>(0);
   const [showFilters, setShowFilters] = useState(false);
   const [sortOption, setSortOption] = useState<string>('none');
@@ -76,8 +76,8 @@ const VendorsPage: React.FC = () => {
   
   // Apply filters to the vendors data
   const filteredVendors = vendors ? vendors.filter((vendor: VendorWithUser) => {
-    // Filter by category if selected
-    if (selectedCategory && vendor.category !== selectedCategory) {
+    // Filter by category if selected (and not 'all')
+    if (selectedCategory && selectedCategory !== 'all' && vendor.category !== selectedCategory) {
       return false;
     }
     
@@ -124,7 +124,7 @@ const VendorsPage: React.FC = () => {
   };
   
   const resetFilters = () => {
-    setSelectedCategory('');
+    setSelectedCategory('all');
     setMinRating(0);
     setSortOption('none');
   };
@@ -170,7 +170,7 @@ const VendorsPage: React.FC = () => {
                 {showFilters ? 'Hide Filters' : 'Show Filters'}
               </Button>
               
-              {(selectedCategory !== '' || minRating > 0 || sortOption !== 'none') && (
+              {(selectedCategory !== 'all' || minRating > 0 || sortOption !== 'none') && (
                 <Button 
                   variant="ghost" 
                   className="text-gray-600" 
@@ -195,7 +195,7 @@ const VendorsPage: React.FC = () => {
                           <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">All Categories</SelectItem>
+                          <SelectItem value="all">All Categories</SelectItem>
                           {CATEGORIES.map(category => (
                             <SelectItem key={category} value={category}>{category}</SelectItem>
                           ))}
@@ -344,7 +344,7 @@ const VendorsPage: React.FC = () => {
                 onClick={() => {
                   setSearchQuery('');
                   setActiveSearch('');
-                  setSelectedCategory('');
+                  setSelectedCategory('all');
                   setMinRating(0);
                   setSortOption('none');
                 }}

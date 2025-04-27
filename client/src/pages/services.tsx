@@ -48,7 +48,7 @@ const SORT_OPTIONS = [
 const ServicesPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSearch, setActiveSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedPriceRange, setSelectedPriceRange] = useState<number>(0); // Index of PRICE_RANGES
   const [showFilters, setShowFilters] = useState(false);
   const [sortOption, setSortOption] = useState<string>('none');
@@ -121,7 +121,7 @@ const ServicesPage: React.FC = () => {
   };
   
   const resetFilters = () => {
-    setSelectedCategory('');
+    setSelectedCategory('all');
     setSelectedPriceRange(0);
     setSortOption('none');
   };
@@ -167,7 +167,7 @@ const ServicesPage: React.FC = () => {
                 {showFilters ? 'Hide Filters' : 'Show Filters'}
               </Button>
               
-              {(selectedCategory || selectedPriceRange > 0) && (
+              {(selectedCategory !== 'all' || selectedPriceRange > 0 || sortOption !== 'none') && (
                 <Button 
                   variant="ghost" 
                   className="text-gray-600" 
@@ -192,7 +192,7 @@ const ServicesPage: React.FC = () => {
                           <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">All Categories</SelectItem>
+                          <SelectItem value="all">All Categories</SelectItem>
                           {CATEGORIES.map(category => (
                             <SelectItem key={category} value={category}>{category}</SelectItem>
                           ))}
