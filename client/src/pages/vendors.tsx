@@ -64,7 +64,7 @@ const SORT_OPTIONS = [
 const VendorsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSearch, setActiveSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [minRating, setMinRating] = useState<number>(0);
   const [showFilters, setShowFilters] = useState(false);
   const [sortOption, setSortOption] = useState<string>('none');
@@ -77,7 +77,7 @@ const VendorsPage: React.FC = () => {
   // Apply filters to the vendors data
   const filteredVendors = vendors ? vendors.filter((vendor: VendorWithUser) => {
     // Filter by category if selected
-    if (selectedCategory && selectedCategory !== 'all' && vendor.category !== selectedCategory) {
+    if (selectedCategory && vendor.category !== selectedCategory) {
       return false;
     }
     
@@ -124,7 +124,7 @@ const VendorsPage: React.FC = () => {
   };
   
   const resetFilters = () => {
-    setSelectedCategory('all');
+    setSelectedCategory('');
     setMinRating(0);
     setSortOption('none');
   };
@@ -170,7 +170,7 @@ const VendorsPage: React.FC = () => {
                 {showFilters ? 'Hide Filters' : 'Show Filters'}
               </Button>
               
-              {(selectedCategory !== 'all' || minRating > 0 || sortOption !== 'none') && (
+              {(selectedCategory !== '' || minRating > 0 || sortOption !== 'none') && (
                 <Button 
                   variant="ghost" 
                   className="text-gray-600" 
