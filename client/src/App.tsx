@@ -6,6 +6,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import HomePage from "@/pages/home";
 import AuthPage from "@/pages/auth";
 import VendorsPage from "@/pages/vendors";
+import ServicesPage from "@/pages/services";
 import VendorProfilePage from "@/pages/vendor-profile";
 import UserProfilePage from "@/pages/user-profile";
 import DashboardPage from "@/pages/dashboard";
@@ -21,10 +22,11 @@ function Router() {
       <Route path="/" component={HomePage} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/vendors" component={VendorsPage} />
+      <Route path="/services" component={ServicesPage} />
       <Route path="/vendors/:id" component={VendorProfilePage} />
       <Route path="/profile" component={UserProfilePage} />
       <Route path="/dashboard" component={DashboardPage} />
-      <Route path="/services" component={VendorServicesPage} />
+      <Route path="/vendor-services" component={VendorServicesPage} />
       <Route path="/bookings" component={BookingsPage} />
       <Route path="/settings" component={SettingsPage} />
       <Route path="/contact" component={ContactPage} />
