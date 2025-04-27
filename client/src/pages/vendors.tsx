@@ -69,13 +69,13 @@ const VendorsPage: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [sortOption, setSortOption] = useState<string>('none');
   
-  const { data: vendors, isLoading, refetch } = useQuery<(Vendor & { user: any })[]>({
+  const { data: vendors, isLoading, refetch } = useQuery<VendorWithUser[]>({
     queryKey: ['/api/vendors', activeSearch],
-    queryFn: () => getVendors()
+    queryFn: () => getVendors(activeSearch)
   });
   
   // Apply filters to the vendors data
-  const filteredVendors = vendors ? vendors.filter((vendor: Vendor & { user: any }) => {
+  const filteredVendors = vendors ? vendors.filter((vendor: VendorWithUser) => {
     // Filter by category if selected
     if (selectedCategory && vendor.category !== selectedCategory) {
       return false;
@@ -87,7 +87,7 @@ const VendorsPage: React.FC = () => {
     }
     
     return true;
-  }).sort((a: Vendor & { user: any }, b: Vendor & { user: any }) => {
+  }).sort((a: VendorWithUser, b: VendorWithUser) => {
     // Apply sorting based on selected option
     switch (sortOption) {
       case 'rating_low_high':

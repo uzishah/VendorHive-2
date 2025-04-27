@@ -13,8 +13,9 @@ export interface ServiceWithVendor extends Service {
 }
 
 // Get all vendors
-export const getVendors = async () => {
-  const response = await apiRequest('GET', '/api/vendors');
+export const getVendors = async (searchQuery?: string) => {
+  const endpoint = searchQuery ? `/api/vendors?search=${encodeURIComponent(searchQuery)}` : '/api/vendors';
+  const response = await apiRequest('GET', endpoint);
   if (!response.ok) {
     throw new Error('Failed to fetch vendors');
   }
