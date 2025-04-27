@@ -11,7 +11,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import StarRating from '@/components/ui/star-rating';
 import { getVendors } from '@/services/api';
-import { Search, Filter, Star } from 'lucide-react';
+import { Search, Filter, Star, ArrowUpDown } from 'lucide-react';
+import { Vendor } from '@shared/schema';
 
 // Common categories for vendors
 const CATEGORIES = [
@@ -28,12 +29,24 @@ const CATEGORIES = [
   'Other'
 ];
 
+// Sorting options
+const SORT_OPTIONS = [
+  { value: 'none', label: 'Default' },
+  { value: 'rating_low_high', label: 'Rating: Low to High' },
+  { value: 'rating_high_low', label: 'Rating: High to Low' },
+  { value: 'reviews_low_high', label: 'Reviews: Low to High' },
+  { value: 'reviews_high_low', label: 'Reviews: High to Low' },
+  { value: 'name_a_z', label: 'Name: A-Z' },
+  { value: 'name_z_a', label: 'Name: Z-A' }
+];
+
 const VendorsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSearch, setActiveSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [minRating, setMinRating] = useState<number>(0);
   const [showFilters, setShowFilters] = useState(false);
+  const [sortOption, setSortOption] = useState<string>('none');
   
   const { data: vendors, isLoading, refetch } = useQuery({
     queryKey: ['/api/vendors', activeSearch],
@@ -53,6 +66,30 @@ const VendorsPage: React.FC = () => {
     }
     
     return true;
+  }).sort((a, b) => {
+    // Apply sorting based on selected option
+    switch (sortOption) {
+      case 'rating_low_high':
+        return a.rating - b.rating;
+      
+      case 'rating_high_low':
+        return b.rating - a.rating;
+      
+      case 'reviews_low_high':
+        return a.reviewCount - b.reviewCount;
+      
+      case 'reviews_high_low':
+        return b.reviewCount - a.reviewCount;
+      
+      case 'name_a_z':
+        return a.businessName.localeCompare(b.businessName);
+      
+      case 'name_z_a':
+        return b.businessName.localeCompare(a.businessName);
+      
+      default:
+        return 0;
+    }
   }) : [];
 
   // Effect to refetch when filters change
@@ -68,6 +105,7 @@ const VendorsPage: React.FC = () => {
   const resetFilters = () => {
     setSelectedCategory('');
     setMinRating(0);
+    setSortOption('none');
   };
   
   return (
@@ -125,7 +163,7 @@ const VendorsPage: React.FC = () => {
             {showFilters && (
               <Card className="mb-6">
                 <CardContent className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                       <Label htmlFor="category-filter" className="mb-2 block">Category</Label>
                       <Select
@@ -146,7 +184,7 @@ const VendorsPage: React.FC = () => {
                     
                     <div>
                       <Label className="mb-2 block">Minimum Rating</Label>
-                      <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-3">
                         {[0, 1, 2, 3, 4, 5].map(rating => (
                           <div key={rating} className="flex items-center">
                             <input 
@@ -178,6 +216,23 @@ const VendorsPage: React.FC = () => {
                           </div>
                         ))}
                       </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="sort-option" className="mb-2 block">Sort By</Label>
+                      <Select
+                        value={sortOption}
+                        onValueChange={setSortOption}
+                      >
+                        <SelectTrigger id="sort-option" className="w-full">
+                          <SelectValue placeholder="Sort vendors by..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SORT_OPTIONS.map(option => (
+                            <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 </CardContent>

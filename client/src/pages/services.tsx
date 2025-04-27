@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Search, Filter, Star, MapPin, Clock } from 'lucide-react';
+import { Search, Filter, Star, MapPin, Clock, ArrowUpDown } from 'lucide-react';
 import { ServiceWithVendor, getAllServices } from '@/services/api';
 
 // Common categories for services
@@ -36,12 +36,22 @@ const PRICE_RANGES = [
   { label: '$200+', min: 200, max: Infinity },
 ];
 
+// Sorting options
+const SORT_OPTIONS = [
+  { value: 'none', label: 'Default' },
+  { value: 'price_low_high', label: 'Price: Low to High' },
+  { value: 'price_high_low', label: 'Price: High to Low' },
+  { value: 'rating_low_high', label: 'Rating: Low to High' },
+  { value: 'rating_high_low', label: 'Rating: High to Low' }
+];
+
 const ServicesPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSearch, setActiveSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedPriceRange, setSelectedPriceRange] = useState<number>(0); // Index of PRICE_RANGES
   const [showFilters, setShowFilters] = useState(false);
+  const [sortOption, setSortOption] = useState<string>('none');
   
   const { data: services = [], isLoading, refetch } = useQuery<ServiceWithVendor[]>({
     queryKey: ['/api/services', activeSearch],
@@ -72,6 +82,32 @@ const ServicesPage: React.FC = () => {
     }
     
     return true;
+  }).sort((a, b) => {
+    // Apply sorting based on selected option
+    switch (sortOption) {
+      case 'price_low_high':
+        const priceA = parseFloat(a.price.replace(/[^0-9.]/g, '')) || 0;
+        const priceB = parseFloat(b.price.replace(/[^0-9.]/g, '')) || 0;
+        return priceA - priceB;
+      
+      case 'price_high_low':
+        const priceAHigh = parseFloat(a.price.replace(/[^0-9.]/g, '')) || 0;
+        const priceBHigh = parseFloat(b.price.replace(/[^0-9.]/g, '')) || 0;
+        return priceBHigh - priceAHigh;
+      
+      case 'rating_low_high':
+        const ratingA = a.vendorInfo?.rating || 0;
+        const ratingB = b.vendorInfo?.rating || 0;
+        return ratingA - ratingB;
+      
+      case 'rating_high_low':
+        const ratingAHigh = a.vendorInfo?.rating || 0;
+        const ratingBHigh = b.vendorInfo?.rating || 0;
+        return ratingBHigh - ratingAHigh;
+      
+      default:
+        return 0;
+    }
   });
 
   // Effect to refetch when filters change
@@ -87,6 +123,7 @@ const ServicesPage: React.FC = () => {
   const resetFilters = () => {
     setSelectedCategory('');
     setSelectedPriceRange(0);
+    setSortOption('none');
   };
   
   return (
@@ -144,7 +181,7 @@ const ServicesPage: React.FC = () => {
             {showFilters && (
               <Card className="mb-6">
                 <CardContent className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                       <Label htmlFor="category-filter" className="mb-2 block">Category</Label>
                       <Select
@@ -175,6 +212,23 @@ const ServicesPage: React.FC = () => {
                         <SelectContent>
                           {PRICE_RANGES.map((range, index) => (
                             <SelectItem key={index} value={index.toString()}>{range.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="sort-option" className="mb-2 block">Sort By</Label>
+                      <Select
+                        value={sortOption}
+                        onValueChange={setSortOption}
+                      >
+                        <SelectTrigger id="sort-option" className="w-full">
+                          <SelectValue placeholder="Sort services by..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SORT_OPTIONS.map(option => (
+                            <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -230,9 +284,24 @@ const ServicesPage: React.FC = () => {
                   </div>
                   
                   {service.vendorInfo && (
-                    <Link href={`/vendors/${service.vendorInfo.id}`}>
-                      <div className="flex items-center mt-2 mb-3 text-sm text-gray-600 hover:text-primary cursor-pointer">
-                        <span>Offered by: {service.vendorInfo.businessName}</span>
+                    <Link href={`/vendors/${service.vendorInfo?.id || 0}`}>
+                      <div className="flex items-center mt-2 mb-1 text-sm text-gray-600 hover:text-primary cursor-pointer">
+                        <span>Offered by: {service.vendorInfo?.businessName}</span>
+                      </div>
+                      <div className="flex items-center mb-3">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`h-3 w-3 ${
+                              star <= (service.vendorInfo?.rating || 0)
+                                ? 'text-yellow-500 fill-yellow-500'
+                                : 'text-gray-300'
+                            }`}
+                          />
+                        ))}
+                        <span className="ml-1 text-xs text-gray-600">
+                          ({(service.vendorInfo?.rating || 0).toFixed(1)})
+                        </span>
                       </div>
                     </Link>
                   )}
