@@ -6,6 +6,8 @@ interface StarRatingProps {
   max?: number;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
+  showCount?: boolean;
+  count?: number;
 }
 
 const StarRating: React.FC<StarRatingProps> = ({
@@ -13,6 +15,8 @@ const StarRating: React.FC<StarRatingProps> = ({
   max = 5,
   size = 'md',
   className = '',
+  showCount = false,
+  count = 0,
 }) => {
   // Calculate size in pixels based on size prop
   const getStarSize = () => {
@@ -40,10 +44,15 @@ const StarRating: React.FC<StarRatingProps> = ({
   });
 
   return (
-    <div className="flex">
+    <div className="flex items-center">
       {stars}
       {rating > 0 && (
-        <span className="ml-1.5 text-sm text-gray-600">{rating.toFixed(1)}</span>
+        <span className="ml-1.5 text-sm text-gray-600">
+          {rating.toFixed(1)}
+          {showCount && count > 0 && (
+            <span className="ml-1 text-xs text-gray-500">({count} {count === 1 ? 'review' : 'reviews'})</span>
+          )}
+        </span>
       )}
     </div>
   );

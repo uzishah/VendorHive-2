@@ -14,6 +14,27 @@ import { getVendors } from '@/services/api';
 import { Search, Filter, Star, ArrowUpDown } from 'lucide-react';
 import { Vendor } from '@shared/schema';
 
+// Extended vendor type to handle MongoDB implementation
+type VendorWithUser = {
+  id: number;
+  userId: string | number;
+  businessName: string;
+  category: string;
+  description: string;
+  services?: string[];
+  businessHours?: Record<string, any>;
+  coverImage?: string;
+  rating: number;
+  reviewCount: number;
+  user: {
+    id: string | number;
+    name: string;
+    email: string;
+    username: string;
+    profileImage?: string;
+  };
+};
+
 // Common categories for vendors
 const CATEGORIES = [
   'Home Services',
@@ -48,38 +69,38 @@ const VendorsPage: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [sortOption, setSortOption] = useState<string>('none');
   
-  const { data: vendors, isLoading, refetch } = useQuery({
+  const { data: vendors, isLoading, refetch } = useQuery<(Vendor & { user: any })[]>({
     queryKey: ['/api/vendors', activeSearch],
-    queryFn: () => getVendors(activeSearch)
+    queryFn: () => getVendors()
   });
   
   // Apply filters to the vendors data
-  const filteredVendors = vendors ? vendors.filter(vendor => {
+  const filteredVendors = vendors ? vendors.filter((vendor: Vendor & { user: any }) => {
     // Filter by category if selected
     if (selectedCategory && vendor.category !== selectedCategory) {
       return false;
     }
     
     // Filter by minimum rating
-    if (minRating > 0 && vendor.rating < minRating) {
+    if (minRating > 0 && (vendor.rating || 0) < minRating) {
       return false;
     }
     
     return true;
-  }).sort((a, b) => {
+  }).sort((a: Vendor & { user: any }, b: Vendor & { user: any }) => {
     // Apply sorting based on selected option
     switch (sortOption) {
       case 'rating_low_high':
-        return a.rating - b.rating;
+        return (a.rating || 0) - (b.rating || 0);
       
       case 'rating_high_low':
-        return b.rating - a.rating;
+        return (b.rating || 0) - (a.rating || 0);
       
       case 'reviews_low_high':
-        return a.reviewCount - b.reviewCount;
+        return (a.reviewCount || 0) - (b.reviewCount || 0);
       
       case 'reviews_high_low':
-        return b.reviewCount - a.reviewCount;
+        return (b.reviewCount || 0) - (a.reviewCount || 0);
       
       case 'name_a_z':
         return a.businessName.localeCompare(b.businessName);
@@ -286,7 +307,7 @@ const VendorsPage: React.FC = () => {
                         {vendor.businessName}
                       </h3>
                       <div className="flex items-center mt-1">
-                        <StarRating rating={vendor.rating} showCount={true} count={vendor.reviewCount} />
+                        <StarRating rating={vendor.rating || 0} showCount={true} count={vendor.reviewCount || 0} />
                       </div>
                     </div>
                   </div>
