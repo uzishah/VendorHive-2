@@ -9,10 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import StarRating from '@/components/ui/star-rating';
-import { apiRequest } from '@/lib/queryClient';
 import { Search, Filter, Star, MapPin, Clock } from 'lucide-react';
-import { Service, getVendors } from '@/services/api';
+import { ServiceWithVendor, getAllServices } from '@/services/api';
 
 // Common categories for services
 const CATEGORIES = [
@@ -38,42 +36,6 @@ const PRICE_RANGES = [
   { label: '$200+', min: 200, max: Infinity },
 ];
 
-// Helper to get all services from all vendors
-const getAllServices = async (): Promise<Service[]> => {
-  try {
-    // First get all vendors
-    const response = await apiRequest('GET', '/api/vendors');
-    const vendors = await response.json();
-    
-    // For each vendor, get their services
-    const servicesPromises = vendors.map(async (vendor: any) => {
-      const servicesResponse = await apiRequest('GET', `/api/vendors/${vendor.id}/services`);
-      const services = await servicesResponse.json();
-      
-      // Add vendor info to each service for display
-      return services.map((service: Service) => ({
-        ...service,
-        vendorInfo: {
-          id: vendor.id,
-          businessName: vendor.businessName,
-          category: vendor.category,
-          rating: vendor.rating,
-          coverImage: vendor.coverImage
-        }
-      }));
-    });
-    
-    // Combine all services
-    const allServicesArrays = await Promise.all(servicesPromises);
-    const allServices = allServicesArrays.flat();
-    
-    return allServices;
-  } catch (error) {
-    console.error('Error fetching all services:', error);
-    return [];
-  }
-};
-
 const ServicesPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSearch, setActiveSearch] = useState('');
@@ -81,7 +43,7 @@ const ServicesPage: React.FC = () => {
   const [selectedPriceRange, setSelectedPriceRange] = useState<number>(0); // Index of PRICE_RANGES
   const [showFilters, setShowFilters] = useState(false);
   
-  const { data: services = [], isLoading, refetch } = useQuery({
+  const { data: services = [], isLoading, refetch } = useQuery<ServiceWithVendor[]>({
     queryKey: ['/api/services', activeSearch],
     queryFn: getAllServices
   });

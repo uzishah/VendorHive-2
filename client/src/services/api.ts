@@ -1,42 +1,229 @@
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest } from '@/lib/queryClient';
+import { Service, Vendor } from '@shared/schema';
 
-export interface Vendor {
-  id: number;
-  userId: number;
-  businessName: string;
-  category: string;
-  description: string;
-  businessHours?: Record<string, any>;
-  rating: number;
-  reviewCount: number;
-  user: {
+// Interface for a service with optional vendor information
+export interface ServiceWithVendor extends Service {
+  vendorInfo?: {
     id: number;
-    name: string;
-    email: string;
-    username: string;
-    profileImage?: string;
-    phone?: string;
-    location?: string;
-    bio?: string;
+    businessName: string;
+    category: string;
+    rating: number;
+    coverImage?: string;
   };
 }
 
-export interface Service {
-  id: number;
-  vendorId: number;
-  name: string;
-  category: string;
-  description: string;
-  price: string;
-  duration?: string;
-  location?: string;
-  imageUrl?: string;
-  timeSlots?: { day: string; startTime: string; endTime: string }[];
-  availableDates?: Date[];
-  availability: boolean;
-  createdAt?: Date;
-}
+// Get all vendors
+export const getVendors = async () => {
+  const response = await apiRequest('GET', '/api/vendors');
+  if (!response.ok) {
+    throw new Error('Failed to fetch vendors');
+  }
+  return response.json();
+};
 
+// Get a single vendor by ID
+export const getVendorById = async (id: number) => {
+  const response = await apiRequest('GET', `/api/vendors/${id}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch vendor');
+  }
+  return response.json();
+};
+
+// Get vendor by user ID
+export const getVendorByUserId = async (userId: number) => {
+  try {
+    const response = await apiRequest('GET', `/api/vendors/user/${userId}`);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to get vendor by user ID');
+    }
+    return response.json();
+  } catch (error) {
+    console.error('Failed to get vendor by user ID:', error);
+    throw error;
+  }
+};
+
+// Get all services for a vendor
+export const getVendorServices = async (vendorId: number) => {
+  const response = await apiRequest('GET', `/api/vendors/${vendorId}/services`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch vendor services');
+  }
+  return response.json();
+};
+
+// Create a new service
+export const createService = async (serviceData: Partial<Service>) => {
+  const response = await apiRequest('POST', '/api/services', serviceData);
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to create service');
+  }
+  return response.json();
+};
+
+// Update a service
+export const updateService = async (id: number, serviceData: Partial<Service>) => {
+  const response = await apiRequest('PUT', `/api/services/${id}`, serviceData);
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to update service');
+  }
+  return response.json();
+};
+
+// Delete a service
+export const deleteService = async (id: number) => {
+  const response = await apiRequest('DELETE', `/api/services/${id}`);
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to delete service');
+  }
+  return true;
+};
+
+// Get all services from all vendors
+export const getAllServices = async (): Promise<ServiceWithVendor[]> => {
+  try {
+    // First get all vendors
+    const vendors = await getVendors();
+    
+    // For each vendor, get their services
+    const servicesPromises = vendors.map(async (vendor: any) => {
+      const services = await getVendorServices(vendor.id);
+      
+      // Add vendor info to each service for display
+      return services.map((service: Service): ServiceWithVendor => ({
+        ...service,
+        vendorInfo: {
+          id: vendor.id,
+          businessName: vendor.businessName,
+          category: vendor.category,
+          rating: vendor.rating,
+          coverImage: vendor.coverImage
+        }
+      }));
+    });
+    
+    // Combine all services
+    const allServicesArrays = await Promise.all(servicesPromises);
+    const allServices = allServicesArrays.flat();
+    
+    return allServices;
+  } catch (error) {
+    console.error('Error fetching all services:', error);
+    return [];
+  }
+};
+
+// Repair a vendor profile when it's missing for a vendor user
+export const repairVendorProfile = async () => {
+  try {
+    const response = await apiRequest('GET', '/api/vendors/repair');
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to repair vendor profile');
+    }
+    return response.json();
+  } catch (error) {
+    console.error('Failed to repair vendor profile:', error);
+    throw error;
+  }
+};
+
+// Create a booking
+export const createBooking = async (bookingData: any) => {
+  try {
+    const response = await apiRequest('POST', '/api/bookings', bookingData);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to create booking');
+    }
+    return response.json();
+  } catch (error) {
+    console.error('Failed to create booking:', error);
+    throw error;
+  }
+};
+
+// Create a review
+export const createReview = async (reviewData: any) => {
+  try {
+    const response = await apiRequest('POST', '/api/reviews', reviewData);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to create review');
+    }
+    return response.json();
+  } catch (error) {
+    console.error('Failed to create review:', error);
+    throw error;
+  }
+};
+
+// Get user bookings
+export const getUserBookings = async () => {
+  try {
+    const response = await apiRequest('GET', '/api/bookings/user');
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to fetch user bookings');
+    }
+    return response.json();
+  } catch (error) {
+    console.error('Failed to fetch user bookings:', error);
+    throw error;
+  }
+};
+
+// Get vendor bookings
+export const getVendorBookings = async () => {
+  try {
+    const response = await apiRequest('GET', '/api/bookings/vendor');
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to fetch vendor bookings');
+    }
+    return response.json();
+  } catch (error) {
+    console.error('Failed to fetch vendor bookings:', error);
+    throw error;
+  }
+};
+
+// Update booking status
+export const updateBookingStatus = async (id: number, status: string, reason?: string) => {
+  try {
+    const response = await apiRequest('PUT', `/api/bookings/${id}/status`, { status, reason });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to update booking status');
+    }
+    return response.json();
+  } catch (error) {
+    console.error('Failed to update booking status:', error);
+    throw error;
+  }
+};
+
+// Get vendor reviews
+export const getVendorReviews = async (vendorId: number) => {
+  try {
+    const response = await apiRequest('GET', `/api/vendors/${vendorId}/reviews`);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to fetch vendor reviews');
+    }
+    return response.json();
+  } catch (error) {
+    console.error('Failed to fetch vendor reviews:', error);
+    throw error;
+  }
+};
+
+// Type definitions
 export interface Booking {
   id: number;
   userId: number;
@@ -45,181 +232,13 @@ export interface Booking {
   date: string;
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
   notes?: string;
+  userName?: string;
+  serviceName?: string;
+  vendorBusinessName?: string;
+  serviceDetails?: string;
+  time?: string;
+  location?: string;
 }
 
-export interface Review {
-  id: number;
-  userId: number;
-  vendorId: number;
-  rating: number;
-  comment?: string;
-  createdAt: string;
-  user: {
-    id: number;
-    name: string;
-    username: string;
-    profileImage?: string;
-  };
-}
-
-// Vendor APIs
-export const getVendors = async (search?: string): Promise<Vendor[]> => {
-  const url = search ? `/api/vendors?search=${encodeURIComponent(search)}` : '/api/vendors';
-  const response = await apiRequest('GET', url);
-  return response.json();
-};
-
-export const getVendorById = async (id: number): Promise<{
-  id: number;
-  userId: number;
-  businessName: string;
-  category: string;
-  description: string;
-  businessHours?: Record<string, any>;
-  rating: number;
-  reviewCount: number;
-  user: {
-    id: number;
-    name: string;
-    email: string;
-    username: string;
-    profileImage?: string;
-    phone?: string;
-    location?: string;
-    bio?: string;
-  };
-  services: Service[];
-  reviews: Review[];
-}> => {
-  const response = await apiRequest('GET', `/api/vendors/${id}`);
-  const data = await response.json();
-
-  // Enhanced debugging for the vendor data API response
-  console.log("Vendor data from API:", data);
-  console.log("Raw services data:", data.services);
-  console.log("Is services an array?", Array.isArray(data.services));
-  
-  if (Array.isArray(data.services)) {
-    console.log("Services count:", data.services.length);
-    data.services.forEach((service: any, index: number) => {
-      console.log(`Service ${index}:`, service);
-    });
-  }
-  
-  // Ensure services and reviews are arrays and properly formatted
-  const result = {
-    ...data,
-    services: Array.isArray(data.services) ? data.services : [],
-    reviews: Array.isArray(data.reviews) ? data.reviews : []
-  };
-  
-  console.log("Returning processed vendor data with services:", result.services);
-  return result;
-};
-
-// Service APIs
-export const getVendorServices = async (vendorId: number): Promise<Service[]> => {
-  try {
-    // Use apiRequest helper which handles auth token consistently
-    const response = await apiRequest('GET', `/api/vendors/${vendorId}/services`);
-    console.log('Get vendor services response:', response.status);
-    return response.json();
-  } catch (error) {
-    console.error('Get vendor services error:', error);
-    throw new Error('Failed to fetch vendor services: ' + (error instanceof Error ? error.message : String(error)));
-  }
-};
-
-export const createService = async (serviceData: Omit<Service, 'id'>): Promise<Service> => {
-  try {
-    // Use apiRequest helper which handles auth token
-    const response = await apiRequest('POST', '/api/services', serviceData);
-    console.log('Service creation response:', response.status);
-    return response.json();
-  } catch (error) {
-    console.error('Service creation error:', error);
-    throw new Error('Failed to create service: ' + (error instanceof Error ? error.message : String(error)));
-  }
-};
-
-export const updateService = async (id: number, serviceData: Partial<Service>): Promise<Service> => {
-  try {
-    // Use apiRequest helper which handles auth token
-    const response = await apiRequest('PUT', `/api/services/${id}`, serviceData);
-    console.log('Service update response:', response.status);
-    return response.json();
-  } catch (error) {
-    console.error('Service update error:', error);
-    throw new Error('Failed to update service: ' + (error instanceof Error ? error.message : String(error)));
-  }
-};
-
-export const deleteService = async (id: number): Promise<boolean> => {
-  try {
-    // Use apiRequest helper which handles auth token
-    const response = await apiRequest('DELETE', `/api/services/${id}`);
-    console.log('Service delete response:', response.status);
-    return true;
-  } catch (error) {
-    console.error('Service delete error:', error);
-    throw new Error('Failed to delete service: ' + (error instanceof Error ? error.message : String(error)));
-  }
-};
-
-// Booking APIs
-export const getUserBookings = async (): Promise<Booking[]> => {
-  const response = await apiRequest('GET', '/api/bookings/user');
-  return response.json();
-};
-
-export const getVendorBookings = async (): Promise<Booking[]> => {
-  const response = await apiRequest('GET', '/api/bookings/vendor');
-  return response.json();
-};
-
-export const createBooking = async (bookingData: Omit<Booking, 'id'>): Promise<Booking> => {
-  const response = await apiRequest('POST', '/api/bookings', bookingData);
-  return response.json();
-};
-
-export const updateBookingStatus = async (id: number, status: string): Promise<Booking> => {
-  const response = await apiRequest('PUT', `/api/bookings/${id}/status`, { status });
-  return response.json();
-};
-
-// Review APIs
-export const getVendorReviews = async (vendorId: number): Promise<Review[]> => {
-  const response = await apiRequest('GET', `/api/vendors/${vendorId}/reviews`);
-  return response.json();
-};
-
-export const createReview = async (reviewData: Omit<Review, 'id' | 'createdAt' | 'user'>): Promise<Review> => {
-  const response = await apiRequest('POST', '/api/reviews', reviewData);
-  return response.json();
-};
-
-// Vendor management APIs
-export const getVendorByUserId = async (userId: number): Promise<Vendor | null> => {
-  const response = await apiRequest('GET', `/api/vendors/user/${userId}`);
-  return response.json();
-};
-
-export const updateVendor = async (id: number, vendorData: Partial<Vendor>): Promise<Vendor> => {
-  const response = await apiRequest('PUT', `/api/vendors/${id}`, vendorData);
-  return response.json();
-};
-
-// Special function to repair/create vendor profile when it's missing
-export const repairVendorProfile = async (): Promise<{
-  message: string;
-  vendor: Vendor;
-}> => {
-  try {
-    const response = await apiRequest('POST', '/api/vendors/repair', {});
-    console.log('Vendor repair response:', response.status);
-    return response.json();
-  } catch (error) {
-    console.error('Vendor repair error:', error);
-    throw new Error('Failed to repair vendor profile: ' + (error instanceof Error ? error.message : String(error)));
-  }
-};
+// Types
+export type { Service };

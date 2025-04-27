@@ -18,6 +18,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   
   const navItems = [
     { name: 'Home', path: '/' },
+    { name: 'Browse Services', path: '/services' },
     { name: 'Browse Vendors', path: '/vendors' },
     { name: 'Bookings', path: '/bookings' },
     { name: 'Contact', path: '/contact' },
@@ -76,6 +77,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                             <div className="flex items-center">
                               <FileText className="mr-2 h-4 w-4" />
                               <span>Dashboard</span>
+                            </div>
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href="/vendor-services">
+                            <div className="flex items-center">
+                              <FileText className="mr-2 h-4 w-4" />
+                              <span>Manage Services</span>
                             </div>
                           </Link>
                         </DropdownMenuItem>
@@ -163,6 +172,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                     <Link href="/dashboard">
                       <div className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 cursor-pointer" onClick={() => setIsMobileMenuOpen(false)}>
                         Dashboard
+                      </div>
+                    </Link>
+                    <Link href="/vendor-services">
+                      <div className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 cursor-pointer" onClick={() => setIsMobileMenuOpen(false)}>
+                        Manage Services
                       </div>
                     </Link>
                     <Link href="/bookings">
