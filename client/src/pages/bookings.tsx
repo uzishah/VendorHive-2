@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { useLocation } from 'wouter';
 
 // Types for booking status
 type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
@@ -51,7 +52,7 @@ const BookingsPage: React.FC = () => {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  // Import useLocation for redirection
+  // For navigation/redirection
   const [_, navigate] = useLocation();
 
   // Mutation for updating booking status
