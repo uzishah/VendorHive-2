@@ -459,10 +459,15 @@ const ServicesPage: React.FC = () => {
                     )}
                   </div>
                   
-                  <div className="mt-4">
+                  <div className="mt-4 flex space-x-2">
                     <Link href={`/vendors/${service.vendorId}`}>
                       <Button variant="outline" className="text-primary hover:bg-primary hover:text-white">
-                        View Details
+                        View Vendor
+                      </Button>
+                    </Link>
+                    <Link href={`/vendors/${service.vendorId}?service=${service.id}&book=true`}>
+                      <Button className="bg-primary hover:bg-primary-dark text-white">
+                        Book Now
                       </Button>
                     </Link>
                   </div>
