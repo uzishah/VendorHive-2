@@ -59,8 +59,17 @@ const VendorProfilePage: React.FC = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const [selectedServiceId, setSelectedServiceId] = useState<number | undefined>(undefined);
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  // Get query parameters from URL
+  const searchParams = new URLSearchParams(window.location.search);
+  const serviceIdParam = searchParams.get('serviceId');
+  const bookParam = searchParams.get('book');
+  
+  // Initialize state with URL parameters if available
+  const initialServiceId = serviceIdParam ? parseInt(serviceIdParam) : undefined;
+  const shouldOpenBookingModal = bookParam === 'true' && initialServiceId !== undefined;
+
+  const [selectedServiceId, setSelectedServiceId] = useState<number | undefined>(initialServiceId);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(shouldOpenBookingModal);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
   const vendorId = params?.id ? parseInt(params.id) : 0;
@@ -111,13 +120,18 @@ const VendorProfilePage: React.FC = () => {
   // Create booking mutation
   const createBookingMutation = useMutation({
     mutationFn: createBooking,
-    onSuccess: () => {
+    onSuccess: (response) => {
       toast({
         title: "Booking successful",
         description: "Your booking has been created successfully",
       });
       setIsBookingModalOpen(false);
       bookingForm.reset();
+      
+      // Redirect to payment page with the booking ID
+      if (response && response.id) {
+        window.location.href = `/payment?bookingId=${response.id}`;
+      }
     },
     onError: (error) => {
       toast({
@@ -400,13 +414,13 @@ const VendorProfilePage: React.FC = () => {
                               <CardFooter className="p-4 pt-0 flex justify-end">
                                 {isAuthenticated && user && user.id !== vendor.userId && (
                                   <Button 
-                                    variant="outline"
+                                    className="bg-primary hover:bg-primary-dark text-white"
                                     onClick={() => {
                                       setSelectedServiceId(service.id);
                                       setIsBookingModalOpen(true);
                                     }}
                                   >
-                                    Book Service
+                                    Book Now
                                   </Button>
                                 )}
                               </CardFooter>

@@ -465,7 +465,7 @@ const ServicesPage: React.FC = () => {
                         View Vendor
                       </Button>
                     </Link>
-                    <Link href={`/vendors/${service.vendorId}?service=${service.id}&book=true`}>
+                    <Link href={`/vendors/${service.vendorId}?serviceId=${service.id}&book=true`}>
                       <Button className="bg-primary hover:bg-primary-dark text-white">
                         Book Now
                       </Button>
