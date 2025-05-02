@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Search, Filter, Star, MapPin, Clock, ArrowUpDown } from 'lucide-react';
+import { Search, Filter, Star, MapPin, Clock, ArrowUpDown, X } from 'lucide-react';
 import { ServiceWithVendor, getAllServices } from '@/services/api';
 
 // Common categories for services
@@ -160,20 +160,25 @@ const ServicesPage: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <Button 
                 variant="ghost" 
-                className="flex items-center text-gray-600" 
+                size="sm"
+                className="flex items-center text-gray-600 p-2" 
                 onClick={() => setShowFilters(!showFilters)}
+                title={showFilters ? 'Hide Filters' : 'Show Filters'}
               >
-                <Filter className="h-4 w-4 mr-2" />
-                {showFilters ? 'Hide Filters' : 'Show Filters'}
+                <Filter className="h-4 w-4" />
+                <span className="sr-only">{showFilters ? 'Hide Filters' : 'Show Filters'}</span>
               </Button>
               
               {(selectedCategory !== 'all' || selectedPriceRange > 0 || sortOption !== 'none') && (
                 <Button 
-                  variant="ghost" 
-                  className="text-gray-600" 
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-600 p-2" 
                   onClick={resetFilters}
+                  title="Reset Filters"
                 >
-                  Reset Filters
+                  <X className="h-4 w-4" />
+                  <span className="sr-only">Reset Filters</span>
                 </Button>
               )}
             </div>

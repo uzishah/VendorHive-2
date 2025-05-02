@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import StarRating from '@/components/ui/star-rating';
 import { getVendors } from '@/services/api';
-import { Search, Filter, Star, ArrowUpDown } from 'lucide-react';
+import { Search, Filter, Star, ArrowUpDown, X } from 'lucide-react';
 import { Vendor } from '@shared/schema';
 
 // Extended vendor type to handle MongoDB implementation
@@ -163,20 +163,25 @@ const VendorsPage: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <Button 
                 variant="ghost" 
-                className="flex items-center text-gray-600" 
+                size="sm"
+                className="flex items-center text-gray-600 p-2" 
                 onClick={() => setShowFilters(!showFilters)}
+                title={showFilters ? 'Hide Filters' : 'Show Filters'}
               >
-                <Filter className="h-4 w-4 mr-2" />
-                {showFilters ? 'Hide Filters' : 'Show Filters'}
+                <Filter className="h-4 w-4" />
+                <span className="sr-only">{showFilters ? 'Hide Filters' : 'Show Filters'}</span>
               </Button>
               
               {(selectedCategory !== 'all' || minRating > 0 || sortOption !== 'none') && (
                 <Button 
-                  variant="ghost" 
-                  className="text-gray-600" 
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-600 p-2" 
                   onClick={resetFilters}
+                  title="Reset Filters"
                 >
-                  Reset Filters
+                  <X className="h-4 w-4" />
+                  <span className="sr-only">Reset Filters</span>
                 </Button>
               )}
             </div>
