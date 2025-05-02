@@ -14,6 +14,7 @@ import VendorServicesPage from "@/pages/vendor-services";
 import BookingsPage from "@/pages/bookings";
 import SettingsPage from "@/pages/settings";
 import ContactPage from "@/pages/contact";
+import PaymentPage from "@/pages/payment";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -30,6 +31,7 @@ function Router() {
       <Route path="/bookings" component={BookingsPage} />
       <Route path="/settings" component={SettingsPage} />
       <Route path="/contact" component={ContactPage} />
+      <Route path="/payment" component={PaymentPage} />
       <Route component={NotFound} />
     </Switch>
   );

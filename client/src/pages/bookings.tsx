@@ -51,19 +51,27 @@ const BookingsPage: React.FC = () => {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
+  // Import useLocation for redirection
+  const [_, navigate] = useLocation();
+
   // Mutation for updating booking status
   const updateBookingStatus = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: BookingStatus }) => {
       const response = await apiRequest('PUT', `/api/bookings/${id}/status`, { status });
-      return response.json();
+      return { data: await response.json(), bookingId: id, newStatus: status };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: [isVendor ? '/api/bookings/vendor' : '/api/bookings/user'] });
       toast({
         title: 'Booking updated',
         description: 'The booking status has been updated successfully',
       });
       setIsDialogOpen(false);
+      
+      // If booking is confirmed and user is a vendor, redirect to payment page
+      if (result.newStatus === 'confirmed' && isVendor) {
+        navigate(`/payment?bookingId=${result.bookingId}`);
+      }
     },
     onError: (error: Error) => {
       toast({
