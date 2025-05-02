@@ -11,8 +11,27 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import StarRating from '@/components/ui/star-rating';
 import { getVendors } from '@/services/api';
-import { Search, Filter, Star, ArrowUpDown, X } from 'lucide-react';
+import { 
+  Search, 
+  Filter, 
+  Star, 
+  ArrowUpDown, 
+  X, 
+  Grid,
+  Home,
+  Briefcase,
+  Sparkles,
+  GraduationCap,
+  List,
+  SortAsc,
+  SortDesc,
+  MessageSquare 
+} from 'lucide-react';
+
 import { Vendor } from '@shared/schema';
+
+// Use Star as StarIcon for our specific scenario
+const StarIcon = Star;
 
 // Extended vendor type to handle MongoDB implementation
 type VendorWithUser = {
@@ -191,21 +210,59 @@ const VendorsPage: React.FC = () => {
                 <CardContent className="p-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
-                      <Label htmlFor="category-filter" className="mb-2 block">Category</Label>
-                      <Select
-                        value={selectedCategory}
-                        onValueChange={setSelectedCategory}
-                      >
-                        <SelectTrigger id="category-filter" className="w-full">
-                          <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Categories</SelectItem>
-                          {CATEGORIES.map(category => (
-                            <SelectItem key={category} value={category}>{category}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Label className="mb-2 block">Category</Label>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={selectedCategory === 'all' ? 'default' : 'outline'}
+                          className="flex items-center"
+                          onClick={() => setSelectedCategory('all')}
+                          title="All Categories"
+                        >
+                          <Grid className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={selectedCategory === 'Home Services' ? 'default' : 'outline'}
+                          className="flex items-center"
+                          onClick={() => setSelectedCategory('Home Services')}
+                          title="Home Services"
+                        >
+                          <Home className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={selectedCategory === 'Professional Services' ? 'default' : 'outline'}
+                          className="flex items-center"
+                          onClick={() => setSelectedCategory('Professional Services')}
+                          title="Professional Services"
+                        >
+                          <Briefcase className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={selectedCategory === 'Beauty & Wellness' ? 'default' : 'outline'}
+                          className="flex items-center"
+                          onClick={() => setSelectedCategory('Beauty & Wellness')}
+                          title="Beauty & Wellness"
+                        >
+                          <Sparkles className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={selectedCategory === 'Education' ? 'default' : 'outline'}
+                          className="flex items-center"
+                          onClick={() => setSelectedCategory('Education')}
+                          title="Education"
+                        >
+                          <GraduationCap className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                     
                     <div>
@@ -245,20 +302,59 @@ const VendorsPage: React.FC = () => {
                     </div>
 
                     <div>
-                      <Label htmlFor="sort-option" className="mb-2 block">Sort By</Label>
-                      <Select
-                        value={sortOption}
-                        onValueChange={setSortOption}
-                      >
-                        <SelectTrigger id="sort-option" className="w-full">
-                          <SelectValue placeholder="Sort vendors by..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {SORT_OPTIONS.map(option => (
-                            <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Label className="mb-2 block">Sort By</Label>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={sortOption === 'none' ? 'default' : 'outline'}
+                          className="flex items-center"
+                          onClick={() => setSortOption('none')}
+                          title="Default"
+                        >
+                          <List className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={sortOption === 'rating_high_low' ? 'default' : 'outline'}
+                          className="flex items-center"
+                          onClick={() => setSortOption('rating_high_low')}
+                          title="Rating: High to Low"
+                        >
+                          <StarIcon className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={sortOption === 'name_a_z' ? 'default' : 'outline'}
+                          className="flex items-center"
+                          onClick={() => setSortOption('name_a_z')}
+                          title="Name: A-Z"
+                        >
+                          <SortAsc className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={sortOption === 'name_z_a' ? 'default' : 'outline'}
+                          className="flex items-center"
+                          onClick={() => setSortOption('name_z_a')}
+                          title="Name: Z-A"
+                        >
+                          <SortDesc className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={sortOption === 'reviews_high_low' ? 'default' : 'outline'}
+                          className="flex items-center"
+                          onClick={() => setSortOption('reviews_high_low')}
+                          title="Reviews: High to Low"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
