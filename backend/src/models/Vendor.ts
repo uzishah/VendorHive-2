@@ -3,12 +3,24 @@ import { z } from 'zod';
 
 // Vendor Mongoose Schema
 const vendorSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  userId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User', 
+    required: true,
+  },
   businessName: { type: String, required: true },
   category: { type: String, required: true },
   description: { type: String, required: true },
   services: [String],
-  businessHours: Object,
+  businessHours: {
+    monday: { open: String, close: String },
+    tuesday: { open: String, close: String },
+    wednesday: { open: String, close: String },
+    thursday: { open: String, close: String },
+    friday: { open: String, close: String },
+    saturday: { open: String, close: String },
+    sunday: { open: String, close: String }
+  },
   coverImage: String,
   rating: { type: Number, default: 0 },
   reviewCount: { type: Number, default: 0 },
@@ -21,8 +33,8 @@ const vendorSchema = new mongoose.Schema({
         return !isNaN(v) && v > 0;
       },
       message: (props: any) => `${props.value} is not a valid positive numeric ID!`
-    } 
-  } // Numeric ID field for internal references
+    }
+  }
 });
 
 // TypeScript interface for Vendor
@@ -41,7 +53,7 @@ export interface Vendor {
 
 // Zod validation schema
 export const vendorSchema_Zod = z.object({
-  userId: z.union([z.number(), z.string()]),
+  userId: z.union([z.string(), z.number()]),
   businessName: z.string().min(2),
   category: z.string(),
   description: z.string().min(10),

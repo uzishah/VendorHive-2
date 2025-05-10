@@ -7,12 +7,23 @@ const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, enum: ['vendor', 'user'], default: 'user' },
+  role: { type: String, enum: ['vendor', 'user'], required: true },
   profileImage: String,
   phone: String,
   bio: String,
   location: String,
-  joinedAt: { type: Date, default: Date.now }
+  joinedAt: { type: Date, default: Date.now },
+  id: { 
+    type: Number, 
+    required: true, 
+    unique: true,
+    validate: {
+      validator: function(v: number): boolean {
+        return !isNaN(v) && v > 0;
+      },
+      message: (props: any) => `${props.value} is not a valid positive numeric ID!`
+    }
+  } // Numeric ID field for internal references
 });
 
 // TypeScript interface for User
@@ -36,7 +47,7 @@ export const userSchema_Zod = z.object({
   username: z.string().min(3),
   email: z.string().email(),
   password: z.string().min(6),
-  role: z.enum(["vendor", "user"]).default("user"),
+  role: z.enum(["vendor", "user"]),
   profileImage: z.string().optional(),
   phone: z.string().optional(),
   bio: z.string().optional(),
