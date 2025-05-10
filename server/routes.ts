@@ -6,11 +6,11 @@ import { authenticateToken, authorizeRole, authorizeVendor } from "./middleware"
 import { upload, uploadImage } from "./cloudinary";
 import { VendorModel, ServiceModel, UserModel } from "./db";
 import { 
-  insertUserSchema, 
-  insertVendorSchema, 
-  insertServiceSchema, 
-  insertBookingSchema, 
-  insertReviewSchema 
+  userSchema, 
+  vendorSchema, 
+  serviceSchema, 
+  bookingSchema, 
+  reviewSchema 
 } from "@shared/schema";
 import { ZodError } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -82,7 +82,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         hasVendorData: !!req.body.vendor
       });
       
-      const userData = insertUserSchema.parse(req.body);
+      const userData = userSchema.parse(req.body);
       console.log('Parsed user data:', userData);
       
       // Check if email already exists
@@ -132,7 +132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log('User ID for vendor creation:', user.id, typeof user.id);
           
           try {
-            const vendorData = insertVendorSchema.parse(req.body.vendor);
+            const vendorData = vendorSchema.parse(req.body.vendor);
             
             // Get the next available vendor ID to ensure it's unique and not null
             const lastVendor = await VendorModel.findOne().sort({ id: -1 });
@@ -186,7 +186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user.role = 'vendor'; // Update local object
         
         try {
-          const vendorData = insertVendorSchema.parse(req.body.vendor);
+          const vendorData = vendorSchema.parse(req.body.vendor);
           
           // Get the next available vendor ID to ensure it's unique and not null
           const lastVendor = await VendorModel.findOne().sort({ id: -1 });
@@ -661,7 +661,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log('Created vendor profile automatically:', newVendor);
             
             // Continue with this new vendor profile
-            const serviceData = insertServiceSchema.parse({
+            const serviceData = serviceSchema.parse({
               ...req.body,
               vendorId: Number(newVendor.id) // Force proper numeric type
             });
@@ -694,7 +694,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Found vendor with ID: ${vendor.id} (type: ${typeof vendor.id})`);
       
       // Make sure vendorId is set to the numeric vendor ID
-      const serviceData = insertServiceSchema.parse({
+      const serviceData = serviceSchema.parse({
         ...req.body,
         vendorId: Number(vendor.id) // Force proper numeric type
       });
@@ -854,7 +854,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Booking routes
   app.post('/api/bookings', authenticateToken, async (req, res, next) => {
     try {
-      const bookingData = insertBookingSchema.parse(req.body);
+      const bookingData = bookingSchema.parse(req.body);
       
       // Ensure userId matches the authenticated user
       if (bookingData.userId !== req.user.id) {
