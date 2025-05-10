@@ -4,7 +4,7 @@ import {
   type Service, type InsertService,
   type Booking, type InsertBooking,
   type Review, type InsertReview
-} from "@shared/schema";
+} from "../../shared/schema";
 import { 
   UserModel, 
   VendorModel, 

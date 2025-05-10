@@ -924,7 +924,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Review routes
   app.post('/api/reviews', authenticateToken, async (req, res, next) => {
     try {
-      const reviewData = insertReviewSchema.parse(req.body);
+      const reviewData = reviewSchema.parse(req.body);
       
       // Ensure userId matches the authenticated user
       if (reviewData.userId !== req.user.id) {
