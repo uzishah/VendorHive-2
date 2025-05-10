@@ -233,7 +233,7 @@ export class MemStorage implements IStorage {
     );
   }
 
-  async updateBookingStatus(id: number, status: string): Promise<Booking | undefined> {
+  async updateBookingStatus(id: number, status: "pending" | "confirmed" | "completed" | "cancelled"): Promise<Booking | undefined> {
     const booking = this.bookings.get(id);
     if (!booking) return undefined;
     
