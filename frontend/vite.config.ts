@@ -5,6 +5,12 @@ import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
 export default defineConfig({
+  // Development server configuration
+  server: {
+    port: 3000,
+    host: true, // Listen on all addresses
+    strictPort: true, // Exit if port is already in use
+  },
   plugins: [
     react(),
     runtimeErrorOverlay(),

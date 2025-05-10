@@ -19,6 +19,8 @@ This document outlines the steps taken to restructure the VendorHive codebase fr
 - Created `models/index.ts` to export all models for easier importing
 - Separated database configuration into `config/database.ts`
 - Restructured the main application entry point into `app.ts` and `index.ts`
+- Added CORS support for running backend separately from frontend
+- Updated backend to run on port 4000 when in separate mode
 
 ### Code Organization
 - Each model now contains:
@@ -36,7 +38,9 @@ This document outlines the steps taken to restructure the VendorHive codebase fr
 - [ ] Test database connections and CRUD operations with new models
 
 ### Frontend
-- [ ] Update frontend API service to work with the restructured backend
+- [x] Created API service in `frontend/src/services/api.ts` to connect to backend API
+- [x] Configured Vite server to run on port 3000 for the frontend
+- [ ] Copy React components from `client` to `frontend` 
 - [ ] Test all frontend functionality against the new backend
 
 ### Integration
@@ -46,27 +50,27 @@ This document outlines the steps taken to restructure the VendorHive codebase fr
 
 ## How to Test the New Structure
 
-To test the new backend structure:
+To test the new backend structure (runs on port 4000):
 ```bash
 # Run the backend server separately
-./run_backend.sh
+./run.sh backend-only
 ```
 
-To test the new frontend structure:
+To test the new frontend structure (runs on port 3000):
 ```bash
 # Run the frontend application separately
-./run_frontend.sh
+./run.sh frontend-only
 ```
 
-To run both in combined mode:
+To run both in combined mode (original structure, port 5000):
 ```bash
 # Run in combined mode (uses current server/index.ts)
 ./run.sh
 ```
 
-To run both in separate mode:
+To run both in separate mode (backend on port 4000, frontend on port 3000):
 ```bash
-# Run backend and frontend as separate processes
+# Run backend and frontend as separate processes with CORS enabled
 ./run.sh separate
 ```
 

@@ -8,6 +8,6 @@ cd backend
 echo "Installing backend dependencies..."
 npm install
 
-# Start the backend server in development mode
-echo "Starting backend server..."
-NODE_ENV=development tsx src/index.ts
+# Start the backend server in development mode on port 4000
+echo "Starting backend server on port 4000..."
+BACKEND_PORT=4000 NODE_ENV=development tsx src/index.ts
