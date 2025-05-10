@@ -1,108 +1,126 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// User schema with role field to distinguish between vendors and regular users
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  username: text("username").notNull().unique(),
-  email: text("email").notNull().unique(),
-  password: text("password").notNull(),
-  role: text("role", { enum: ["vendor", "user"] }).notNull().default("user"),
-  profileImage: text("profile_image"),
-  phone: text("phone"),
-  bio: text("bio"),
-  location: text("location"),
-  joinedAt: timestamp("joined_at").notNull().defaultNow(),
+// Type definitions based on MongoDB models
+// These types serve as interfaces to maintain compatibility with existing code
+
+export interface User {
+  id: number;
+  name: string;
+  username: string;
+  email: string;
+  password: string;
+  role: "vendor" | "user";
+  profileImage?: string;
+  phone?: string;
+  bio?: string;
+  location?: string;
+  joinedAt: Date;
+}
+
+export interface Vendor {
+  id: number;
+  userId: number | string;
+  businessName: string;
+  category: string;
+  description: string;
+  services?: string[];
+  businessHours?: Record<string, any>;
+  coverImage?: string;
+  rating: number;
+  reviewCount: number;
+}
+
+export interface Service {
+  id: number;
+  vendorId: number;
+  name: string;
+  category: string;
+  description: string;
+  price: string;
+  duration?: string;
+  location?: string;
+  imageUrl?: string;
+  timeSlots?: Record<string, any>;
+  availableDates?: Record<string, any>;
+  availability: boolean;
+  createdAt: Date;
+}
+
+export interface Booking {
+  id: number;
+  userId: number;
+  vendorId: number;
+  serviceId?: number;
+  date: Date;
+  status: "pending" | "confirmed" | "completed" | "cancelled";
+  notes?: string;
+}
+
+export interface Review {
+  id: number;
+  userId: number;
+  vendorId: number;
+  rating: number;
+  comment?: string;
+  createdAt: Date;
+}
+
+// Validation schemas using Zod
+export const userSchema = z.object({
+  name: z.string().min(2),
+  username: z.string().min(3),
+  email: z.string().email(),
+  password: z.string().min(6),
+  role: z.enum(["vendor", "user"]).default("user"),
+  profileImage: z.string().optional(),
+  phone: z.string().optional(),
+  bio: z.string().optional(),
+  location: z.string().optional(),
 });
 
-// Vendor-specific information
-export const vendors = pgTable("vendors", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
-  businessName: text("business_name").notNull(),
-  category: text("category").notNull(),
-  description: text("description").notNull(),
-  services: text("services").array(),
-  businessHours: jsonb("business_hours"),
-  coverImage: text("cover_image"),
-  rating: integer("rating").default(0),
-  reviewCount: integer("review_count").default(0),
+export const vendorSchema = z.object({
+  userId: z.union([z.number(), z.string()]),
+  businessName: z.string().min(2),
+  category: z.string(),
+  description: z.string().min(10),
+  services: z.array(z.string()).optional(),
+  businessHours: z.record(z.any()).optional(),
+  coverImage: z.string().optional(),
 });
 
-// Services that vendors offer
-export const services = pgTable("services", {
-  id: serial("id").primaryKey(),
-  vendorId: integer("vendor_id").notNull().references(() => vendors.id),
-  name: text("name").notNull(),
-  category: text("category").notNull(),
-  description: text("description").notNull(),
-  price: text("price").notNull(),
-  duration: text("duration"),
-  location: text("location"),
-  imageUrl: text("image_url"),
-  timeSlots: jsonb("time_slots"),
-  availableDates: jsonb("available_dates"),
-  availability: boolean("availability").default(true),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+export const serviceSchema = z.object({
+  vendorId: z.number(),
+  name: z.string().min(2),
+  category: z.string(),
+  description: z.string().min(10),
+  price: z.string(),
+  duration: z.string().optional(),
+  location: z.string().optional(),
+  imageUrl: z.string().optional(),
+  timeSlots: z.record(z.any()).optional(),
+  availableDates: z.record(z.any()).optional(),
+  availability: z.boolean().default(true),
 });
 
-// Bookings made by users
-export const bookings = pgTable("bookings", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
-  vendorId: integer("vendor_id").notNull().references(() => vendors.id),
-  serviceId: integer("service_id").references(() => services.id),
-  date: timestamp("date").notNull(),
-  status: text("status", { enum: ["pending", "confirmed", "completed", "cancelled"] }).notNull().default("pending"),
-  notes: text("notes"),
+export const bookingSchema = z.object({
+  userId: z.number(),
+  vendorId: z.number(),
+  serviceId: z.number().optional(),
+  date: z.date(),
+  status: z.enum(["pending", "confirmed", "completed", "cancelled"]).default("pending"),
+  notes: z.string().optional(),
 });
 
-// Reviews left by users for vendors
-export const reviews = pgTable("reviews", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
-  vendorId: integer("vendor_id").notNull().references(() => vendors.id),
-  rating: integer("rating").notNull(),
-  comment: text("comment"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+export const reviewSchema = z.object({
+  userId: z.number(),
+  vendorId: z.number(),
+  rating: z.number().min(1).max(5),
+  comment: z.string().optional(),
 });
 
-// Define schemas and types for insertion
-export const insertUserSchema = createInsertSchema(users).omit({
-  id: true,
-  joinedAt: true,
-});
-
-export const insertVendorSchema = createInsertSchema(vendors).omit({
-  rating: true,
-  reviewCount: true,
-});
-
-export const insertServiceSchema = createInsertSchema(services);
-
-export const insertBookingSchema = createInsertSchema(bookings).omit({
-  id: true,
-});
-
-export const insertReviewSchema = createInsertSchema(reviews).omit({
-  id: true,
-  createdAt: true,
-});
-
-// Define types
-export type User = typeof users.$inferSelect;
-export type InsertUser = z.infer<typeof insertUserSchema>;
-
-export type Vendor = typeof vendors.$inferSelect;
-export type InsertVendor = z.infer<typeof insertVendorSchema>;
-
-export type Service = typeof services.$inferSelect;
-export type InsertService = z.infer<typeof insertServiceSchema>;
-
-export type Booking = typeof bookings.$inferSelect;
-export type InsertBooking = z.infer<typeof insertBookingSchema>;
-
-export type Review = typeof reviews.$inferSelect;
-export type InsertReview = z.infer<typeof insertReviewSchema>;
+// Export type aliases for insert operations
+export type InsertUser = z.infer<typeof userSchema>;
+export type InsertVendor = z.infer<typeof vendorSchema>;
+export type InsertService = z.infer<typeof serviceSchema>;
+export type InsertBooking = z.infer<typeof bookingSchema>;
+export type InsertReview = z.infer<typeof reviewSchema>;
