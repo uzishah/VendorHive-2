@@ -1,99 +1,80 @@
-# Migration Guide: Moving to the New Project Structure
+# VendorHive Migration Guide
 
-This guide provides step-by-step instructions for switching from the current project structure to the new separated frontend/backend structure.
+This document outlines the steps taken to restructure the VendorHive codebase from a monolithic structure to a more modular architecture with clear separation between frontend and backend components.
 
-## Overview of Changes
+## Completed Tasks
 
-We've restructured the project to better separate concerns:
+### Directory Structure
+- Created dedicated `backend/` and `frontend/` directories with their respective package.json files
+- Moved and refactored code from the root `server/` and `client/` directories
+- Created execution scripts (`run.sh`, `run_backend.sh`, `run_frontend.sh`) to make development easier
 
-- **From**: Combined structure with `/client`, `/server`, and `/shared` directories
-- **To**: Separated structure with `/frontend`, `/backend`, and `/shared` directories
+### Backend Restructuring
+- Created individual model files in `backend/src/models/` for each entity:
+  - `User.ts`
+  - `Vendor.ts`
+  - `Service.ts`
+  - `Booking.ts`
+  - `Review.ts`
+- Created `models/index.ts` to export all models for easier importing
+- Separated database configuration into `config/database.ts`
+- Restructured the main application entry point into `app.ts` and `index.ts`
 
-The new structure provides better isolation between frontend and backend code, making it easier to develop, test, and deploy each part independently.
+### Code Organization
+- Each model now contains:
+  - Mongoose schema definition
+  - TypeScript interface
+  - Zod validation schema
+  - Export of the Mongoose model
 
-## Migration Steps
+## Next Steps
 
-### 1. Switching to the New Structure
+### Backend
+- [ ] Copy and adapt `server/routes.ts` to use the new model structure
+- [ ] Copy and adapt `server/storage.ts` to use the new model structure
+- [ ] Copy and adapt authentication functionality
+- [ ] Test database connections and CRUD operations with new models
 
-The project is currently set up to continue working with the original structure while allowing a gradual transition to the new structure.
+### Frontend
+- [ ] Update frontend API service to work with the restructured backend
+- [ ] Test all frontend functionality against the new backend
 
-To start using the new structure:
+### Integration
+- [ ] Update workflow configuration to use the new structure
+- [ ] Create comprehensive tests for the new structure
+- [ ] Switch gradually from the old structure to the new one to ensure smooth transition
 
-1. Edit the `run.sh` script to uncomment the new structure section and comment out the current one:
+## How to Test the New Structure
 
+To test the new backend structure:
 ```bash
-# Comment out this line:
-# npm run dev
-
-# Uncomment these lines:
-echo "Starting backend server..."
-cd backend && NODE_ENV=development tsx src/index.ts &
-BACKEND_PID=$!
-
-echo "Starting frontend development server..."
-cd frontend && npm run dev &
-FRONTEND_PID=$!
-
-function cleanup {
-  echo "Stopping servers..."
-  kill $BACKEND_PID
-  kill $FRONTEND_PID
-  exit 0
-}
-
-trap cleanup SIGINT
-wait
+# Run the backend server separately
+./run_backend.sh
 ```
 
-2. Rename the new package.json file to replace the current one:
+To test the new frontend structure:
 ```bash
-mv new-package.json package.json
+# Run the frontend application separately
+./run_frontend.sh
 ```
 
-3. Use the run script to start the server in the new structure:
+To run both in combined mode:
 ```bash
+# Run in combined mode (uses current server/index.ts)
 ./run.sh
 ```
 
-### 2. Updating Workflow Configuration
-
-To properly configure Replit workflows for the new structure:
-
-1. Update the `.replit` configuration to use the new structure (through Replit's UI)
-2. Create a new workflow for running the separated backend and frontend
-
-### 3. Fixing Remaining TypeScript Issues
-
-The `TYPESCRIPT_ISSUES.md` file documents known TypeScript issues and how to fix them.
-
-### 4. Removing Old Structure Files
-
-Once the new structure is confirmed working correctly, you can remove the old structure files:
-
+To run both in separate mode:
 ```bash
-# Be careful with this step! Make sure the new structure is working first
-rm -rf client/ server/
+# Run backend and frontend as separate processes
+./run.sh separate
 ```
 
-## Code Updates
+## Troubleshooting
 
-Most of the code updates have already been made, including:
+If you encounter issues with the restructured codebase:
 
-1. Updated import paths in the frontend and backend
-2. Created proper package.json files for each section
-3. Updated TypeScript configurations
-4. Fixed critical type issues
-
-## Testing
-
-After migration, thoroughly test all functionality to ensure it works as expected:
-
-1. User authentication and authorization
-2. Vendor registration and profiles
-3. Service listing and booking
-4. Payment processing
-5. Review and rating system
-
-## Conclusion
-
-This migration allows for better organization and separation of concerns in the codebase, making it easier to maintain and expand in the future. If you encounter any issues during migration, consult the codebase and documentation for more details.
+1. Check the console logs for error messages
+2. Verify that all dependencies are correctly installed in both frontend and backend directories
+3. Ensure that environment variables (including database connection strings) are available
+4. Compare the model structures with the original schemas to identify any discrepancies

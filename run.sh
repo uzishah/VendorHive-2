@@ -1,33 +1,38 @@
 #!/bin/bash
+# This script runs both the frontend and backend applications
 
-# This is a simple script to run development server for both frontend and backend
-# This script is for development and testing purposes only
+# Set up error handling
+set -e
 
-# Set NODE_ENV to development
-export NODE_ENV=development
+# Define a function to handle exit
+cleanup() {
+  echo "Stopping all processes..."
+  kill $(jobs -p) 2>/dev/null || true
+  exit 0
+}
 
-# Run the current workflow
-# This keeps the current setup working while we transition to the new structure
-echo "Starting server using current structure..."
-echo "The app is available at port 5000"
-npm run dev
+# Set trap for signals
+trap cleanup SIGINT SIGTERM
 
-# Note: When ready to switch to the new structure, uncomment the following lines
-# and comment out the "npm run dev" line above
-# echo "Starting backend server..."
-# cd backend && NODE_ENV=development tsx src/index.ts &
-# BACKEND_PID=$!
-# 
-# echo "Starting frontend development server..."
-# cd frontend && npm run dev &
-# FRONTEND_PID=$!
-# 
-# function cleanup {
-#   echo "Stopping servers..."
-#   kill $BACKEND_PID
-#   kill $FRONTEND_PID
-#   exit 0
-# }
-# 
-# trap cleanup SIGINT
-# wait
+echo "Starting VendorHive application..."
+
+# Check if we need to run in combined mode or separate mode
+if [ "$1" == "separate" ]; then
+  # Run backend and frontend in separate terminals
+  echo "Starting backend server..."
+  ./run_backend.sh &
+  BACKEND_PID=$!
+  
+  echo "Starting frontend application..."
+  ./run_frontend.sh &
+  FRONTEND_PID=$!
+  
+  wait $BACKEND_PID $FRONTEND_PID
+else
+  # Run in combined mode using the main server/index.ts entry point
+  echo "Starting application in combined mode..."
+  NODE_ENV=development tsx server/index.ts
+fi
+
+# Wait for all background processes
+wait
