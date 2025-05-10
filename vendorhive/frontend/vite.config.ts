@@ -10,6 +10,12 @@ export default defineConfig({
     port: 3000,
     host: true, // Listen on all addresses
     strictPort: true, // Exit if port is already in use
+    proxy: {
+      '/api': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+      }
+    },
   },
   plugins: [
     react(),
@@ -28,11 +34,11 @@ export default defineConfig({
     alias: {
       "@": path.resolve(import.meta.dirname, "src"),
       "@shared": path.resolve(import.meta.dirname, "..", "shared"),
-      "@assets": path.resolve(import.meta.dirname, "..", "attached_assets"),
+      "@assets": path.resolve(import.meta.dirname, "src/assets"),
     },
   },
   build: {
-    outDir: path.resolve(import.meta.dirname, "..", "dist", "public"),
+    outDir: path.resolve(import.meta.dirname, "dist"),
     emptyOutDir: true,
   },
 });
