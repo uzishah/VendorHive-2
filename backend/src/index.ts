@@ -1,10 +1,10 @@
-import app from './app';
+import app, { allowedOrigins } from './app';
 import { connectMongoose } from './config/database';
-import { setupVite, serveStatic } from './vite';
 import { Server } from 'http';
 import { registerRoutes } from './routes';
 
-const PORT = process.env.PORT || 5000;
+// Using a different port for the backend API
+const BACKEND_PORT = process.env.BACKEND_PORT || 4000;
 
 (async () => {
   // Connect to MongoDB (required)
@@ -22,20 +22,14 @@ const PORT = process.env.PORT || 5000;
   // Register API routes
   await registerRoutes(app);
 
-  // Setup Vite for development or static files for production
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
-
-  // Start the server
+  // Start the server - API only, no Vite integration
   server.listen({
-    port: PORT,
+    port: BACKEND_PORT,
     host: "0.0.0.0",
     reusePort: true,
   }, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`Backend API server running on http://localhost:${BACKEND_PORT}`);
+    console.log('CORS enabled for frontend origins: ', allowedOrigins.join(', '));
   });
 })().catch(err => {
   console.error('Server startup error:', err);
