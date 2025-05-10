@@ -181,7 +181,11 @@ export class MemStorage implements IStorage {
   // Service related methods
   async createService(insertService: InsertService): Promise<Service> {
     const id = this.serviceIdCounter++;
-    const service: Service = { ...insertService, id };
+    const service: Service = { 
+      ...insertService, 
+      id,
+      createdAt: new Date() 
+    };
     this.services.set(id, service);
     return service;
   }
