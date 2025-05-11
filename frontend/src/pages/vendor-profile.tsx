@@ -174,9 +174,9 @@ const VendorProfilePage: React.FC = () => {
       return;
     }
 
-    // Ensure userId and vendorId are numbers, and date is properly formatted
+    // Use the actual user ID from the token without trying to convert it
     createBookingMutation.mutate({
-      userId: typeof user.id === 'string' ? parseInt(user.id as string, 10) : user.id as number,
+      userId: user.id, // Keep the original user ID format from the authentication
       vendorId: vendorId,
       serviceId: selectedServiceId,
       date: values.date, // Send the date object directly, not as a string

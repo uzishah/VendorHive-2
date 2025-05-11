@@ -854,19 +854,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Booking routes
   app.post('/api/bookings', authenticateToken, async (req, res, next) => {
     try {
-      // Transform request body to ensure correct types before validation
+      // Debug information
+      console.log('Booking request body:', req.body);
+      console.log('Authenticated user ID:', req.user.id, 'type:', typeof req.user.id);
+      
+      // Instead of transforming all fields, accept the user ID directly from auth
       const transformedData = {
         ...req.body,
-        userId: typeof req.body.userId === 'string' ? parseInt(req.body.userId, 10) : req.body.userId,
+        userId: req.user.id, // Use the authenticated user's ID directly
         vendorId: typeof req.body.vendorId === 'string' ? parseInt(req.body.vendorId, 10) : req.body.vendorId,
         serviceId: req.body.serviceId ? (typeof req.body.serviceId === 'string' ? parseInt(req.body.serviceId, 10) : req.body.serviceId) : undefined,
         date: req.body.date instanceof Date ? req.body.date : new Date(req.body.date),
       };
 
+      console.log('Transformed booking data:', transformedData);
       const bookingData = bookingSchema.parse(transformedData);
+      console.log('Parsed booking data:', bookingData);
       
-      // Ensure userId matches the authenticated user
-      if (bookingData.userId !== req.user.id) {
+      // With this approach, we don't need this check anymore since we're using the auth user ID
+      // But we'll keep it for extra security with string comparison
+      if (String(bookingData.userId) !== String(req.user.id)) {
+        console.log('User ID mismatch:', bookingData.userId, '!==', req.user.id);
         return res.status(403).json({ message: 'You can only create bookings for yourself' });
       }
       
