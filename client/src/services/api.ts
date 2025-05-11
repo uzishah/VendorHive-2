@@ -36,6 +36,13 @@ export const getVendorById = async (id: number) => {
   return api.vendors.getById(id);
 };
 
+export const getVendorByUserId = async (userId: number | string) => {
+  // Special endpoint to get vendor data by user ID
+  return fetchWithErrorHandling(`${API_BASE_URL}/vendors/user/${userId}`, {
+    headers: getAuthHeaders(),
+  });
+};
+
 export const getVendorServices = async (vendorId: number) => {
   return api.services.getByVendorId(vendorId);
 };
@@ -55,6 +62,22 @@ export const getAllServices = async (): Promise<ServiceWithVendor[]> => {
   
   // The backend should be returning services with associated vendor data
   return response;
+};
+
+export const getUserBookings = async () => {
+  return api.bookings.getByUserId();
+};
+
+export const getVendorBookings = async () => {
+  return api.bookings.getByVendorId();
+};
+
+export const updateBookingStatus = async (id: number, status: string) => {
+  return api.bookings.updateStatus(id, status);
+};
+
+export const createService = async (serviceData: any) => {
+  return api.services.create(serviceData);
 };
 
 export const createBooking = async (bookingData: any) => {
