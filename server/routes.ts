@@ -871,11 +871,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bookingData = bookingSchema.parse(transformedData);
       console.log('Parsed booking data:', bookingData);
       
-      // With this approach, we don't need this check anymore since we're using the auth user ID
-      // But we'll keep it for extra security with string comparison
-      if (String(bookingData.userId) !== String(req.user.id)) {
-        console.log('User ID mismatch:', bookingData.userId, '!==', req.user.id);
-        return res.status(403).json({ message: 'You can only create bookings for yourself' });
+      // Check if the vendor is trying to book their own service
+      const vendorId = bookingData.vendorId;
+      
+      try {
+        // Check if user is a vendor for this service
+        const vendor = await storage.getVendorByUserId(req.user.id);
+        console.log('Checking if user is vendor:', { vendor, vendorId });
+        
+        if (vendor && vendor.id === vendorId) {
+          console.log('Vendor tried to book their own service');
+          return res.status(403).json({ message: 'Vendors cannot book their own services' });
+        }
+      } catch (err) {
+        console.log('Error checking vendor status:', err);
+        // Continue if there's an error checking vendor status
       }
       
       // Create booking
@@ -942,11 +952,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Review routes
   app.post('/api/reviews', authenticateToken, async (req, res, next) => {
     try {
-      const reviewData = insertReviewSchema.parse(req.body);
+      // Use the authenticated user's ID
+      const transformedData = {
+        ...req.body,
+        userId: req.user.id,
+      };
       
-      // Ensure userId matches the authenticated user
-      if (reviewData.userId !== req.user.id) {
-        return res.status(403).json({ message: 'You can only create reviews as yourself' });
+      console.log('Review data:', transformedData);
+      
+      // Fix reviewSchema usage (not insertReviewSchema)
+      const reviewData = reviewSchema.parse(transformedData);
+      
+      // Check if the vendor is trying to review their own business
+      const vendorId = reviewData.vendorId;
+      
+      try {
+        // Check if user is the vendor they're trying to review
+        const vendor = await storage.getVendorByUserId(req.user.id);
+        console.log('Review check - Is vendor:', { vendor, vendorId });
+        
+        if (vendor && vendor.id === vendorId) {
+          console.log('Vendor tried to review their own business');
+          return res.status(403).json({ message: 'You cannot review your own business' });
+        }
+      } catch (err) {
+        console.log('Error checking vendor status for review:', err);
+        // Continue if there's an error checking vendor status
       }
       
       // Create review
@@ -954,6 +985,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.status(201).json(review);
     } catch (error) {
+      console.error('Review creation error:', error);
       next(error);
     }
   });

@@ -196,7 +196,7 @@ const VendorProfilePage: React.FC = () => {
     }
 
     createReviewMutation.mutate({
-      userId: user.id,
+      userId: user.id, // Use the ID directly from auth
       vendorId: vendorId,
       rating: values.rating,
       comment: values.comment,
