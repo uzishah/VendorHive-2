@@ -27,7 +27,11 @@ export async function apiRequest(
   console.log(`API Request: ${method} ${url}`);
   console.log(`With token: ${token ? 'Yes' : 'No'}`);
   
-  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+  // In Replit, the backend and frontend are served from the same origin
+  // So we don't need to add a port or different host
+  const BACKEND_URL = '';
+  
+  console.log(`Using relative URL for API requests`);
   
   // Add the backend URL if the URL starts with /api
   const fullUrl = url.startsWith('/api') 
@@ -67,7 +71,11 @@ export const getQueryFn: <T>(options: {
     console.log(`Query: ${queryKey[0]}`);
     console.log(`With token: ${token ? 'Yes' : 'No'}`);
     
-    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+    // In Replit, the backend and frontend are served from the same origin
+    // So we don't need to add a port or different host
+    const BACKEND_URL = '';
+    
+    console.log(`Using relative URL for query`);
     
     // Add the backend URL if the URL starts with /api
     const url = queryKey[0] as string;

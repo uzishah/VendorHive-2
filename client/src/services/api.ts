@@ -1,7 +1,15 @@
 // API service for communicating with the backend
 
 // Backend API URL
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+// Get the current hostname and protocol from the window location
+const hostname = window.location.hostname;
+const protocol = window.location.protocol;
+
+// Use the hostname from the current page to build the backend URL
+// This ensures we're connecting to the right server in all environments
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || `${protocol}//${hostname}:5000`;
+console.log(`API Service using backend URL: ${BACKEND_URL}`);
+
 export const API_BASE_URL = `${BACKEND_URL}/api`;
 
 // Type definition for Service with Vendor information
