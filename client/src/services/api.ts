@@ -93,15 +93,14 @@ export const createReview = async (reviewData: any) => {
   return api.reviews.create(reviewData);
 };
 
-export const repairVendorProfile = async (vendorId: number, profileData: any) => {
-  // This function does not exist in the original API, so we need to implement it
-  return fetchWithErrorHandling(`${API_BASE_URL}/vendors/${vendorId}`, {
-    method: 'PUT',
+export const repairVendorProfile = async () => {
+  // This function requests the server to repair/create a vendor profile for the current user
+  return fetchWithErrorHandling(`${API_BASE_URL}/vendors/repair`, {
+    method: 'POST',
     headers: {
       ...getAuthHeaders(),
       'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(profileData),
+    }
   });
 };
 

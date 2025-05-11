@@ -350,7 +350,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Use the repair API endpoint
       const result = await apiRepairVendorProfile();
       
-      if (result.vendor) {
+      if (result && result.vendor) {
         // Update local state with the new vendor profile
         setVendorProfile(result.vendor);
         
