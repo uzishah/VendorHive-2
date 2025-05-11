@@ -1,16 +1,12 @@
 // API service for communicating with the backend
 
 // Backend API URL
-// Get the current hostname and protocol from the window location
-const hostname = window.location.hostname;
-const protocol = window.location.protocol;
+// In Replit, the backend and frontend are served from the same origin
+// So we just use a relative URL
+const BACKEND_URL = '';
+console.log(`API Service using relative URLs`);
 
-// Use the hostname from the current page to build the backend URL
-// This ensures we're connecting to the right server in all environments
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || `${protocol}//${hostname}:5000`;
-console.log(`API Service using backend URL: ${BACKEND_URL}`);
-
-export const API_BASE_URL = `${BACKEND_URL}/api`;
+export const API_BASE_URL = `/api`;
 
 // Type definition for Service with Vendor information
 export interface ServiceWithVendor {
@@ -115,21 +111,28 @@ export const repairVendorProfile = async () => {
 // Generic fetch function with error handling
 async function fetchWithErrorHandling(url: string, options: RequestInit = {}) {
   try {
+    console.log(`Making API request to: ${url}`);
     const response = await fetch(url, options);
     
     // Handle non-2xx responses
     if (!response.ok) {
+      console.error(`API error: ${response.status} ${response.statusText}`);
       const errorData = await response.json().catch(() => ({
-        message: 'An unknown error occurred'
+        message: `HTTP error ${response.status}: ${response.statusText}`
       }));
       
       throw new Error(errorData.message || `HTTP error ${response.status}`);
     }
     
     // Parse JSON response
+    console.log(`API request to ${url} successful`);
     return await response.json();
   } catch (error) {
     console.error('API request failed:', error);
+    // Rethrow with more context if it's a network error
+    if (error instanceof TypeError && error.message === 'Failed to fetch') {
+      throw new Error(`Network error: Could not connect to API endpoint ${url}. Make sure the server is running.`);
+    }
     throw error;
   }
 }
