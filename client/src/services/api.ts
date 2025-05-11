@@ -1,7 +1,8 @@
 // API service for communicating with the backend
 
 // Backend API URL
-export const API_BASE_URL = 'http://localhost:5000/api';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+export const API_BASE_URL = `${BACKEND_URL}/api`;
 
 // Type definition for Service with Vendor information
 export interface ServiceWithVendor {
@@ -128,7 +129,7 @@ async function fetchWithErrorHandling(url: string, options: RequestInit = {}) {
 
 // Function to include authentication token in requests
 function getAuthHeaders(): Record<string, string> {
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem('token');
   // Always return a valid Record<string, string>, even if empty
   return token ? { 'Authorization': `Bearer ${token}` } : { 'Content-Type': 'application/json' };
 }
@@ -159,7 +160,7 @@ export const api = {
     },
     
     logout: async () => {
-      localStorage.removeItem('authToken');
+      localStorage.removeItem('token');
       return { success: true };
     }
   },

@@ -90,31 +90,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUserProfile = async () => {
     try {
-      const response = await fetch('/api/users/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        credentials: 'include'
-      });
+      const response = await apiRequest('GET', '/api/users/me');
+      const data = await response.json();
       
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-        setVendorProfile(data.vendorProfile || null);
-        
-        // Update localStorage
-        localStorage.setItem('user', JSON.stringify(data.user));
-        if (data.vendorProfile) {
-          localStorage.setItem('vendorProfile', JSON.stringify(data.vendorProfile));
-        } else {
-          localStorage.removeItem('vendorProfile');
-        }
-      } else if (response.status === 401) {
-        // Token expired or invalid
-        logout();
+      setUser(data.user);
+      setVendorProfile(data.vendorProfile || null);
+      
+      // Update localStorage
+      localStorage.setItem('user', JSON.stringify(data.user));
+      if (data.vendorProfile) {
+        localStorage.setItem('vendorProfile', JSON.stringify(data.vendorProfile));
+      } else {
+        localStorage.removeItem('vendorProfile');
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);
+      // If it's a 401 error (unauthorized), log out the user
+      if (error instanceof Error && error.message.includes('401')) {
+        logout();
+      }
     }
   };
 
@@ -279,31 +273,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     try {
-      const response = await fetch('/api/users/me', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(userData),
-        credentials: 'include'
-      });
+      const response = await apiRequest('PUT', '/api/users/me', userData);
+      const updatedUser = await response.json();
+      setUser(prev => prev ? { ...prev, ...updatedUser } : updatedUser);
       
-      if (response.ok) {
-        const updatedUser = await response.json();
-        setUser(prev => prev ? { ...prev, ...updatedUser } : updatedUser);
-        
-        // Update localStorage
-        localStorage.setItem('user', JSON.stringify({ ...user, ...updatedUser }));
-        
-        toast({
-          title: 'Profile updated',
-          description: 'Your profile has been updated successfully',
-        });
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Could not update profile');
-      }
+      // Update localStorage
+      localStorage.setItem('user', JSON.stringify({ ...user, ...updatedUser }));
+      
+      toast({
+        title: 'Profile updated',
+        description: 'Your profile has been updated successfully',
+      });
     } catch (error) {
       console.error('Update profile error:', error);
       toast({
@@ -329,31 +309,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     try {
-      const response = await fetch('/api/vendors/me', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(vendorData),
-        credentials: 'include'
-      });
+      const response = await apiRequest('PUT', '/api/vendors/me', vendorData);
+      const updatedVendorProfile = await response.json();
+      setVendorProfile(prev => prev ? { ...prev, ...updatedVendorProfile } : updatedVendorProfile);
       
-      if (response.ok) {
-        const updatedVendorProfile = await response.json();
-        setVendorProfile(prev => prev ? { ...prev, ...updatedVendorProfile } : updatedVendorProfile);
-        
-        // Update localStorage
-        localStorage.setItem('vendorProfile', JSON.stringify({ ...vendorProfile, ...updatedVendorProfile }));
-        
-        toast({
-          title: 'Vendor profile updated',
-          description: 'Your vendor profile has been updated successfully',
-        });
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Could not update vendor profile');
-      }
+      // Update localStorage
+      localStorage.setItem('vendorProfile', JSON.stringify({ ...vendorProfile, ...updatedVendorProfile }));
+      
+      toast({
+        title: 'Vendor profile updated',
+        description: 'Your vendor profile has been updated successfully',
+      });
     } catch (error) {
       console.error('Update vendor profile error:', error);
       toast({
