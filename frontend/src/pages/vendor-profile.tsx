@@ -174,14 +174,14 @@ const VendorProfilePage: React.FC = () => {
       return;
     }
 
-    // Use the actual user ID from the token without trying to convert it
+    console.log('Submitting booking with vendor ID:', vendorId);
+    
+    // Only send the necessary fields - userId will be pulled from auth token in the backend
     createBookingMutation.mutate({
-      userId: user.id, // Keep the original user ID format from the authentication
       vendorId: vendorId,
       serviceId: selectedServiceId,
-      date: values.date, // Send the date object directly, not as a string
-      status: 'pending',
-      notes: values.notes,
+      date: values.date,
+      notes: values.notes || ''
     });
   };
 

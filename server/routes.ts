@@ -854,39 +854,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Booking routes
   app.post('/api/bookings', authenticateToken, async (req, res, next) => {
     try {
-      // Debug information
-      console.log('Booking request body:', req.body);
-      console.log('Authenticated user ID:', req.user.id, 'type:', typeof req.user.id);
+      console.log('Booking request received');
+      console.log('Body:', req.body);
+      console.log('Auth user:', req.user.id, req.user.username);
       
-      // Instead of transforming all fields, accept the user ID directly from auth
-      const transformedData = {
-        ...req.body,
-        userId: req.user.id, // Use the authenticated user's ID directly
-        vendorId: typeof req.body.vendorId === 'string' ? parseInt(req.body.vendorId, 10) : req.body.vendorId,
-        serviceId: req.body.serviceId ? (typeof req.body.serviceId === 'string' ? parseInt(req.body.serviceId, 10) : req.body.serviceId) : undefined,
-        date: req.body.date instanceof Date ? req.body.date : new Date(req.body.date),
-      };
-
-      console.log('Transformed booking data:', transformedData);
-      const bookingData = bookingSchema.parse(transformedData);
-      console.log('Parsed booking data:', bookingData);
+      // Get the vendor ID from the request
+      let vendorId = req.body.vendorId;
+      if (typeof vendorId === 'string') {
+        vendorId = parseInt(vendorId, 10);
+      }
+      console.log('Vendor ID for booking:', vendorId);
       
-      // Check if the vendor is trying to book their own service
-      const vendorId = bookingData.vendorId;
-      
+      // First check if user is trying to book their own vendor service
       try {
-        // Check if user is a vendor for this service
-        const vendor = await storage.getVendorByUserId(req.user.id);
-        console.log('Checking if user is vendor:', { vendor, vendorId });
+        // Get the user's vendor profile if they are a vendor
+        const userVendor = await storage.getVendorByUserId(req.user.id);
+        console.log('User vendor profile:', userVendor);
         
-        if (vendor && vendor.id === vendorId) {
-          console.log('Vendor tried to book their own service');
+        if (userVendor && userVendor.id === vendorId) {
+          console.log('Vendor tried to book their own service - not allowed');
           return res.status(403).json({ message: 'Vendors cannot book their own services' });
         }
-      } catch (err) {
-        console.log('Error checking vendor status:', err);
-        // Continue if there's an error checking vendor status
+      } catch (error) {
+        console.log('Error checking if user is vendor:', error);
+        // Not a vendor, that's fine - continue
       }
+
+      // Create a fresh booking object with correctly typed values 
+      const bookingData = {
+        userId: req.user.id,
+        vendorId: vendorId,
+        serviceId: req.body.serviceId ? (typeof req.body.serviceId === 'string' ? parseInt(req.body.serviceId, 10) : req.body.serviceId) : undefined,
+        date: req.body.date instanceof Date ? req.body.date : new Date(req.body.date),
+        status: 'pending' as 'pending' | 'confirmed' | 'completed' | 'cancelled', // Type assertion
+        notes: req.body.notes || '',
+      };
       
       // Create booking
       const booking = await storage.createBooking(bookingData);

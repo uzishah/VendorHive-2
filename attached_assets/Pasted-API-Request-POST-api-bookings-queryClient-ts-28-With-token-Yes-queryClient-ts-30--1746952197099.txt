@@ -1,0 +1,66 @@
+API Request: POST /api/bookings
+queryClient.ts:28 With token: Yes
+queryClient.ts:30 
+            
+            
+           POST https://0b5685d1-96fd-48ad-91a1-099c375d25bd-00-145771km7ugh3.sisko.replit.dev/api/bookings 403 (Forbidden)
+apiRequest @ queryClient.ts:30
+createBooking @ api.ts:140
+fn @ @tanstack_react-query.js?v=ef0a854c:1189
+run @ @tanstack_react-query.js?v=ef0a854c:494
+start @ @tanstack_react-query.js?v=ef0a854c:536
+execute @ @tanstack_react-query.js?v=ef0a854c:1225
+await in execute
+mutate @ @tanstack_react-query.js?v=ef0a854c:2630
+(anonymous) @ @tanstack_react-query.js?v=ef0a854c:3295
+handleBookingSubmit @ vendor-profile.tsx:177
+(anonymous) @ chunk-YABUFNLM.js?v=ef0a854c:1675
+await in (anonymous)
+callCallback2 @ chunk-RPCDYKBN.js?v=ef0a854c:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=ef0a854c:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=ef0a854c:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=ef0a854c:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=ef0a854c:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=ef0a854c:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=ef0a854c:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=ef0a854c:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=ef0a854c:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=ef0a854c:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=ef0a854c:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=ef0a854c:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=ef0a854c:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=ef0a854c:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=ef0a854c:5449Understand this error
+queryClient.ts:38 API Error: 403 Forbidden
+apiRequest @ queryClient.ts:38
+await in apiRequest
+createBooking @ api.ts:140
+fn @ @tanstack_react-query.js?v=ef0a854c:1189
+run @ @tanstack_react-query.js?v=ef0a854c:494
+start @ @tanstack_react-query.js?v=ef0a854c:536
+execute @ @tanstack_react-query.js?v=ef0a854c:1225
+await in execute
+mutate @ @tanstack_react-query.js?v=ef0a854c:2630
+(anonymous) @ @tanstack_react-query.js?v=ef0a854c:3295
+handleBookingSubmit @ vendor-profile.tsx:177
+(anonymous) @ chunk-YABUFNLM.js?v=ef0a854c:1675
+await in (anonymous)
+callCallback2 @ chunk-RPCDYKBN.js?v=ef0a854c:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=ef0a854c:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=ef0a854c:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=ef0a854c:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=ef0a854c:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=ef0a854c:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=ef0a854c:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=ef0a854c:7051
+(anonymous) @ chunk-RPCDYKBN.js?v=ef0a854c:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=ef0a854c:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=ef0a854c:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=ef0a854c:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=ef0a854c:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=ef0a854c:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=ef0a854c:5449Understand this error
+api.ts:147 Failed to create booking: Error: 403: {"message":"You can only create bookings for yourself"}
+    at throwIfResNotOk (queryClient.ts:6:11)
+    at async apiRequest (queryClient.ts:41:3)
+    at async Object.createBooking [as mutationFn] (api.ts:140:22)
