@@ -174,14 +174,13 @@ const VendorProfilePage: React.FC = () => {
       return;
     }
 
-    console.log('Submitting booking with vendor ID:', vendorId);
-    
-    // Only send the necessary fields - userId will be pulled from auth token in the backend
     createBookingMutation.mutate({
+      userId: user.id,
       vendorId: vendorId,
       serviceId: selectedServiceId,
-      date: values.date,
-      notes: values.notes || ''
+      date: values.date.toISOString(),
+      status: 'pending',
+      notes: values.notes,
     });
   };
 
@@ -196,7 +195,7 @@ const VendorProfilePage: React.FC = () => {
     }
 
     createReviewMutation.mutate({
-      userId: user.id, // Use the ID directly from auth
+      userId: user.id,
       vendorId: vendorId,
       rating: values.rating,
       comment: values.comment,
