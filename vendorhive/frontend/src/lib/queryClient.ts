@@ -27,7 +27,14 @@ export async function apiRequest(
   console.log(`API Request: ${method} ${url}`);
   console.log(`With token: ${token ? 'Yes' : 'No'}`);
   
-  const res = await fetch(url, {
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
+  
+  // Add the backend URL if the URL starts with /api
+  const fullUrl = url.startsWith('/api') 
+    ? `${BACKEND_URL}${url}` 
+    : url;
+    
+  const res = await fetch(fullUrl, {
     method,
     headers,
     body: data ? JSON.stringify(data) : undefined,
@@ -60,7 +67,13 @@ export const getQueryFn: <T>(options: {
     console.log(`Query: ${queryKey[0]}`);
     console.log(`With token: ${token ? 'Yes' : 'No'}`);
     
-    const res = await fetch(queryKey[0] as string, {
+    // Add the backend URL if the URL starts with /api
+    const url = queryKey[0] as string;
+    const fullUrl = url.startsWith('/api') 
+      ? `http://localhost:4000${url}` 
+      : url;
+      
+    const res = await fetch(fullUrl, {
       headers,
       credentials: "include",
     });

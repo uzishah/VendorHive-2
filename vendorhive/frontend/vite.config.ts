@@ -10,12 +10,6 @@ export default defineConfig({
     port: 3000,
     host: true, // Listen on all addresses
     strictPort: true, // Exit if port is already in use
-    proxy: {
-      '/api': {
-        target: 'http://localhost:4000',
-        changeOrigin: true,
-      }
-    },
   },
   plugins: [
     react(),
