@@ -1,7 +1,34 @@
 // API service for communicating with the backend
 
 // Backend API URL (running on different port)
-export const API_BASE_URL = 'http://localhost:4000/api';
+export const API_BASE_URL = 'http://localhost:5000/api';
+
+// Define types for export
+export interface Service {
+  id: number;
+  vendorId: number;
+  name: string;
+  category: string;
+  description: string;
+  price: string;
+  duration?: string;
+  location?: string;
+  imageUrl?: string;
+  timeSlots?: Record<string, any>;
+  availableDates?: Record<string, any>;
+  availability: boolean;
+  createdAt?: Date;
+}
+
+export interface Booking {
+  id: number;
+  userId: number;
+  vendorId: number;
+  serviceId?: number;
+  date: string | Date;
+  status: "pending" | "confirmed" | "completed" | "cancelled";
+  notes?: string;
+}
 
 // Generic fetch function with error handling
 async function fetchWithErrorHandling(url: string, options: RequestInit = {}) {
@@ -179,5 +206,11 @@ export const api = {
     }
   }
 };
+
+// Convenience exports of commonly used functions
+export const getVendorById = (id: number) => api.vendors.getById(id);
+export const getVendorServices = (vendorId: number) => api.services.getByVendorId(vendorId);
+export const createBooking = (bookingData: any) => api.bookings.create(bookingData);
+export const createReview = (reviewData: any) => api.reviews.create(reviewData);
 
 export default api;
