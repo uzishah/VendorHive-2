@@ -84,6 +84,10 @@ export const createBooking = async (bookingData: any) => {
   return api.bookings.create(bookingData);
 };
 
+export const getVendorReviews = async (vendorId: number) => {
+  return api.reviews.getByVendorId(vendorId);
+};
+
 export const createReview = async (reviewData: any) => {
   return api.reviews.create(reviewData);
 };
