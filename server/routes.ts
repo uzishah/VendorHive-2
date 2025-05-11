@@ -854,7 +854,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Booking routes
   app.post('/api/bookings', authenticateToken, async (req, res, next) => {
     try {
-      const bookingData = bookingSchema.parse(req.body);
+      // Transform request body to ensure correct types before validation
+      const transformedData = {
+        ...req.body,
+        userId: typeof req.body.userId === 'string' ? parseInt(req.body.userId, 10) : req.body.userId,
+        vendorId: typeof req.body.vendorId === 'string' ? parseInt(req.body.vendorId, 10) : req.body.vendorId,
+        serviceId: req.body.serviceId ? (typeof req.body.serviceId === 'string' ? parseInt(req.body.serviceId, 10) : req.body.serviceId) : undefined,
+        date: req.body.date instanceof Date ? req.body.date : new Date(req.body.date),
+      };
+
+      const bookingData = bookingSchema.parse(transformedData);
       
       // Ensure userId matches the authenticated user
       if (bookingData.userId !== req.user.id) {
@@ -866,6 +875,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.status(201).json(booking);
     } catch (error) {
+      console.error('Booking creation error:', error);
       next(error);
     }
   });

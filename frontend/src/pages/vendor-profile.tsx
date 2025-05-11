@@ -174,11 +174,12 @@ const VendorProfilePage: React.FC = () => {
       return;
     }
 
+    // Ensure userId and vendorId are numbers, and date is properly formatted
     createBookingMutation.mutate({
-      userId: user.id,
+      userId: typeof user.id === 'string' ? parseInt(user.id as string, 10) : user.id as number,
       vendorId: vendorId,
       serviceId: selectedServiceId,
-      date: values.date.toISOString(),
+      date: values.date, // Send the date object directly, not as a string
       status: 'pending',
       notes: values.notes,
     });
