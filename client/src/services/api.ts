@@ -3,6 +3,34 @@
 // Backend API URL (running on different port)
 export const API_BASE_URL = 'http://localhost:4000/api';
 
+// Type definition for Service with Vendor information
+export interface ServiceWithVendor {
+  id: number;
+  vendorId: number;
+  name: string;
+  category: string;
+  description: string;
+  price: string;
+  duration?: string;
+  location?: string;
+  imageUrl?: string;
+  timeSlots?: Record<string, any>;
+  availableDates?: Record<string, any>;
+  availability: boolean;
+  createdAt: Date;
+  vendor?: {
+    id: number;
+    businessName: string;
+    category: string;
+    rating: number;
+    reviewCount: number;
+    user: {
+      name: string;
+      profileImage?: string;
+    };
+  };
+}
+
 // Export individual functions to maintain compatibility with existing code
 export const getVendorById = async (id: number) => {
   return api.vendors.getById(id);
@@ -10,6 +38,23 @@ export const getVendorById = async (id: number) => {
 
 export const getVendorServices = async (vendorId: number) => {
   return api.services.getByVendorId(vendorId);
+};
+
+export const getVendors = async (searchQuery?: string) => {
+  if (searchQuery && searchQuery.trim() !== '') {
+    return api.vendors.search(searchQuery);
+  }
+  return api.vendors.getAll();
+};
+
+export const getAllServices = async (): Promise<ServiceWithVendor[]> => {
+  // Fetch all services from various vendors
+  const response = await fetchWithErrorHandling(`${API_BASE_URL}/services`, {
+    headers: getAuthHeaders(),
+  });
+  
+  // The backend should be returning services with associated vendor data
+  return response;
 };
 
 export const createBooking = async (bookingData: any) => {
