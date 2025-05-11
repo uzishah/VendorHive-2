@@ -67,10 +67,12 @@ export const getQueryFn: <T>(options: {
     console.log(`Query: ${queryKey[0]}`);
     console.log(`With token: ${token ? 'Yes' : 'No'}`);
     
+    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
+    
     // Add the backend URL if the URL starts with /api
     const url = queryKey[0] as string;
     const fullUrl = url.startsWith('/api') 
-      ? `http://localhost:4000${url}` 
+      ? `${BACKEND_URL}${url}` 
       : url;
       
     const res = await fetch(fullUrl, {

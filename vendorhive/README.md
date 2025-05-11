@@ -43,6 +43,17 @@ This will start:
 - Backend server on port 4000
 - Frontend development server on port 3000
 
+### CORS Configuration
+
+The application uses CORS for communication between frontend and backend:
+
+- Frontend makes direct HTTP requests to `http://localhost:4000/api/*`
+- Backend has CORS configured to accept requests from the frontend domain
+- Authentication tokens are passed in the Authorization header
+- Cookies are supported with `credentials: 'include'`
+
+This setup allows for true separation of concerns, with frontend and backend operating as independent services.
+
 ### Running Individual Components
 
 To run only the frontend:

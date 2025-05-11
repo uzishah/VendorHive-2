@@ -7,7 +7,12 @@ import cors from 'cors';
 dotenv.config();
 
 // Define allowed origins for CORS
-export const allowedOrigins = ['http://localhost:3000', 'http://localhost:5173'];
+export const allowedOrigins = [
+  'http://localhost:3000',   // Frontend development server
+  'http://localhost:5173',   // Vite alternative port
+  'http://0.0.0.0:3000',     // For container/VM environments
+  'https://vendorhive.replit.dev', // For Replit deployment
+];
 
 // Create Express app
 const app = express();
@@ -20,13 +25,22 @@ app.use(cors({
     // Allow requests with no origin (like mobile apps, curl requests)
     if (!origin) return callback(null, true);
     
+    // In development mode, be more permissive with CORS
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`CORS request from origin: ${origin}`);
+      return callback(null, true);
+    }
+    
+    // In production, check against the allowlist
     if (allowedOrigins.indexOf(origin) === -1) {
       const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
       return callback(new Error(msg), false);
     }
     return callback(null, true);
   },
-  credentials: true // Allow cookies and authentication headers
+  credentials: true, // Allow cookies and authentication headers
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 // Middleware for logging API requests
