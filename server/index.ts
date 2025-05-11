@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { connectMongoose } from "./db";
 import dotenv from 'dotenv';
+import cors from 'cors';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -10,6 +11,12 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Configure CORS for all origins during development
+app.use(cors({
+  origin: true, // This allows all origins
+  credentials: true // Allow cookies and authentication headers
+}));
 
 app.use((req, res, next) => {
   const start = Date.now();
