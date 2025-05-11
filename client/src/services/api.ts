@@ -1,7 +1,7 @@
 // API service for communicating with the backend
 
-// Backend API URL (running on different port)
-export const API_BASE_URL = 'http://localhost:4000/api';
+// Backend API URL
+export const API_BASE_URL = 'http://localhost:5000/api';
 
 // Type definition for Service with Vendor information
 export interface ServiceWithVendor {

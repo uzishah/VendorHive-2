@@ -27,7 +27,7 @@ export async function apiRequest(
   console.log(`API Request: ${method} ${url}`);
   console.log(`With token: ${token ? 'Yes' : 'No'}`);
   
-  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
   
   // Add the backend URL if the URL starts with /api
   const fullUrl = url.startsWith('/api') 
@@ -67,7 +67,7 @@ export const getQueryFn: <T>(options: {
     console.log(`Query: ${queryKey[0]}`);
     console.log(`With token: ${token ? 'Yes' : 'No'}`);
     
-    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
+    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
     
     // Add the backend URL if the URL starts with /api
     const url = queryKey[0] as string;
