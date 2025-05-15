@@ -734,6 +734,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get services for the current vendor (authenticated user)
+  // Get services by vendor ID (public endpoint, no auth required)
+  app.get('/api/services/vendor/:vendorId', async (req, res, next) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      if (isNaN(vendorId)) {
+        return res.status(400).json({ message: 'Invalid vendor ID' });
+      }
+      
+      const services = await storage.getServicesByVendorId(vendorId);
+      res.json(services);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
   app.get('/api/services/vendor', authenticateToken, authorizeRole(['vendor']), async (req, res, next) => {
     try {
       console.log('Fetching services for current vendor user:', req.user.id);
@@ -952,6 +967,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Review routes
+  // Get reviews for a vendor
+  app.get('/api/reviews/vendor/:vendorId', async (req, res, next) => {
+    try {
+      const vendorId = parseInt(req.params.vendorId);
+      if (isNaN(vendorId)) {
+        return res.status(400).json({ message: 'Invalid vendor ID' });
+      }
+      
+      const reviews = await storage.getReviewsByVendorId(vendorId);
+      res.json(reviews);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
   app.post('/api/reviews', authenticateToken, async (req, res, next) => {
     try {
       // Use the authenticated user's ID
