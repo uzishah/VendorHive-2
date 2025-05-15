@@ -58,7 +58,7 @@ const vendorUpdateSchema = z.object({
 });
 
 const DashboardPage: React.FC = () => {
-  const { user, isAuthenticated, vendorProfile, updateVendorProfile, repairVendorProfile } = useAuth();
+  const { user, isAuthenticated, vendorProfile, token, updateVendorProfile, repairVendorProfile } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isAddServiceModalOpen, setIsAddServiceModalOpen] = useState(false);
@@ -144,9 +144,13 @@ const DashboardPage: React.FC = () => {
       const formData = new FormData();
       formData.append('image', file);
       
-      // Upload image
+      // Upload image with authorization header
       const response = await fetch('/api/upload', {
         method: 'POST',
+        headers: {
+          // Use token from parent component
+          'Authorization': `Bearer ${token}`
+        },
         body: formData,
         credentials: 'include'
       });

@@ -67,11 +67,13 @@ interface ServiceFormData {
 function ServiceForm({ 
   initialData, 
   onSubmit, 
-  isSubmitting 
+  isSubmitting,
+  authToken
 }: { 
   initialData?: Partial<ServiceFormData>; 
   onSubmit: (data: ServiceFormData) => void; 
   isSubmitting: boolean;
+  authToken: string | null;
 }) {
   const { toast } = useToast();
   const [formData, setFormData] = useState<ServiceFormData>({
@@ -490,7 +492,7 @@ function ServiceForm({
 }
 
 export default function VendorServicesPage() {
-  const { user, vendorProfile, isAuthenticated } = useAuth();
+  const { user, vendorProfile, isAuthenticated, token } = useAuth();
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
