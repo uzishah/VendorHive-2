@@ -139,6 +139,10 @@ function ServiceForm({
       
       const response = await fetch('/api/upload', {
         method: 'POST',
+        headers: {
+          // Include the auth token for authentication
+          'Authorization': `Bearer ${authToken}`
+        },
         body: formData,
         credentials: 'include'
         // No Content-Type header, let the browser set it with the boundary
@@ -708,6 +712,7 @@ export default function VendorServicesPage() {
                     ? updateServiceMutation.isPending
                     : createServiceMutation.isPending
                 }
+                authToken={token}
               />
             </DialogContent>
           </Dialog>
