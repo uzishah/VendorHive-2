@@ -74,10 +74,18 @@ const ServicesPage: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [sortOption, setSortOption] = useState<string>('none');
   
-  const { data: services = [], isLoading, refetch } = useQuery<ServiceWithVendor[]>({
+  const { data: services = [], isLoading, refetch, error } = useQuery<ServiceWithVendor[]>({
     queryKey: ['/api/services', activeSearch],
     queryFn: getAllServices
   });
+  
+  // Debug log
+  useEffect(() => {
+    console.log('Services data:', services);
+    if (error) {
+      console.error('Error fetching services:', error);
+    }
+  }, [services, error]);
   
   // Apply filters to the services data
   const filteredServices = services.filter(service => {
@@ -117,13 +125,13 @@ const ServicesPage: React.FC = () => {
         return priceBHigh - priceAHigh;
       
       case 'rating_low_high':
-        const ratingA = a.vendorInfo?.rating || 0;
-        const ratingB = b.vendorInfo?.rating || 0;
+        const ratingA = a.vendor?.rating || a.vendorInfo?.rating || 0;
+        const ratingB = b.vendor?.rating || b.vendorInfo?.rating || 0;
         return ratingA - ratingB;
       
       case 'rating_high_low':
-        const ratingAHigh = a.vendorInfo?.rating || 0;
-        const ratingBHigh = b.vendorInfo?.rating || 0;
+        const ratingAHigh = a.vendor?.rating || a.vendorInfo?.rating || 0;
+        const ratingBHigh = b.vendor?.rating || b.vendorInfo?.rating || 0;
         return ratingBHigh - ratingAHigh;
       
       default:
@@ -416,24 +424,24 @@ const ServicesPage: React.FC = () => {
                     </span>
                   </div>
                   
-                  {service.vendorInfo && (
-                    <Link href={`/vendors/${service.vendorInfo?.id || 0}`}>
+                  {(service.vendor || service.vendorInfo) && (
+                    <Link href={`/vendors/${service.vendor?.id || service.vendorInfo?.id || 0}`}>
                       <div className="flex items-center mt-2 mb-1 text-sm text-gray-600 hover:text-primary cursor-pointer">
-                        <span>Offered by: {service.vendorInfo?.businessName}</span>
+                        <span>Offered by: {service.vendor?.businessName || service.vendorInfo?.businessName}</span>
                       </div>
                       <div className="flex items-center mb-3">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <Star
                             key={star}
                             className={`h-3 w-3 ${
-                              star <= (service.vendorInfo?.rating || 0)
+                              star <= (service.vendor?.rating || service.vendorInfo?.rating || 0)
                                 ? 'text-yellow-500 fill-yellow-500'
                                 : 'text-gray-300'
                             }`}
                           />
                         ))}
                         <span className="ml-1 text-xs text-gray-600">
-                          ({(service.vendorInfo?.rating || 0).toFixed(1)})
+                          ({(service.vendor?.rating || service.vendorInfo?.rating || 0).toFixed(1)})
                         </span>
                       </div>
                     </Link>
