@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -29,6 +30,8 @@ import {
   Clock, 
   DollarSign, 
   FileText, 
+  ImagePlus,
+  Loader2,
   PlusCircle, 
   Settings, 
   Users, 
@@ -60,6 +63,16 @@ const DashboardPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [isAddServiceModalOpen, setIsAddServiceModalOpen] = useState(false);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+  
+  // Handle modal close to reset form
+  const handleAddServiceModalOpenChange = (open: boolean) => {
+    setIsAddServiceModalOpen(open);
+    if (!open) {
+      // Reset form state when closing modal
+      serviceForm.reset();
+      setImagePreview(null);
+    }
+  };
   
   // CRITICAL FIX: Ensure all hooks are called before any conditional returns
   // for consistent hook ordering (React Hooks rule)
@@ -770,7 +783,7 @@ const DashboardPage: React.FC = () => {
       </div>
       
       {/* Add Service Modal */}
-      <Dialog open={isAddServiceModalOpen} onOpenChange={setIsAddServiceModalOpen}>
+      <Dialog open={isAddServiceModalOpen} onOpenChange={handleAddServiceModalOpenChange}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Add New Service</DialogTitle>
@@ -938,10 +951,10 @@ const DashboardPage: React.FC = () => {
               />
               
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsAddServiceModalOpen(false)}>
+                <Button type="button" variant="outline" onClick={() => handleAddServiceModalOpenChange(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={createServiceMutation.isPending}>
+                <Button type="submit" disabled={createServiceMutation.isPending || uploading}>
                   {createServiceMutation.isPending ? 'Creating...' : 'Create Service'}
                 </Button>
               </DialogFooter>
