@@ -308,6 +308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/users/me', authenticateToken, async (req, res, next) => {
     try {
       const userData = req.body;
+      console.log('Updating user profile:', req.user.id, 'Type:', typeof req.user.id, 'with data:', userData);
       
       // Don't allow changing email to one that already exists
       if (userData.email) {
@@ -330,16 +331,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userData.password = await hashPassword(userData.password);
       }
       
-      // Update user
-      const updatedUser = await storage.updateUser(req.user.id, userData);
-      if (!updatedUser) {
+      // Direct MongoDB update since we're using MongoDB ObjectId
+      const mongoUser = await UserModel.findByIdAndUpdate(
+        req.user.id,
+        { $set: userData },
+        { new: true }
+      );
+      
+      if (!mongoUser) {
         return res.status(404).json({ message: 'User not found' });
       }
+      
+      // Convert MongoDB user to our schema format
+      const updatedUser = {
+        id: mongoUser._id.toString(),
+        name: mongoUser.name,
+        username: mongoUser.username,
+        email: mongoUser.email,
+        password: mongoUser.password,
+        role: mongoUser.role,
+        profileImage: mongoUser.profileImage,
+        phone: mongoUser.phone,
+        bio: mongoUser.bio,
+        location: mongoUser.location,
+        joinedAt: mongoUser.joinedAt || new Date()
+      };
       
       // Return updated user info (without password)
       const { password, ...userWithoutPassword } = updatedUser;
       res.json(userWithoutPassword);
     } catch (error) {
+      console.error('Error updating user:', error);
       next(error);
     }
   });
@@ -531,6 +553,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.put('/api/vendors/me', authenticateToken, authorizeRole(['vendor']), async (req, res, next) => {
     try {
+      console.log('Updating vendor for user ID:', req.user.id, 'with data:', req.body);
       const vendorData = req.body;
       
       // Get vendor by user ID
@@ -539,14 +562,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Vendor profile not found' });
       }
       
-      // Update vendor
-      const updatedVendor = await storage.updateVendor(vendor.id, vendorData);
-      if (!updatedVendor) {
-        return res.status(404).json({ message: 'Vendor not found' });
+      console.log('Found vendor profile with ID:', vendor.id);
+      
+      // Direct MongoDB update
+      const updatedMongoVendor = await VendorModel.findOneAndUpdate(
+        { id: vendor.id },
+        { $set: vendorData },
+        { new: true }
+      );
+      
+      if (!updatedMongoVendor) {
+        return res.status(404).json({ message: 'Failed to update vendor profile' });
       }
       
+      console.log('Updated vendor in MongoDB:', updatedMongoVendor);
+      
+      // Convert to our schema format
+      const updatedVendor = {
+        id: updatedMongoVendor.id,
+        userId: updatedMongoVendor.userId.toString(),
+        businessName: updatedMongoVendor.businessName,
+        category: updatedMongoVendor.category,
+        description: updatedMongoVendor.description,
+        services: updatedMongoVendor.services || [],
+        businessHours: updatedMongoVendor.businessHours || {},
+        coverImage: updatedMongoVendor.coverImage,
+        rating: updatedMongoVendor.rating,
+        reviewCount: updatedMongoVendor.reviewCount
+      };
+      
+      console.log('Sending updated vendor back to client:', updatedVendor);
       res.json(updatedVendor);
     } catch (error) {
+      console.error('Error updating vendor:', error);
       next(error);
     }
   });
@@ -734,6 +782,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get services for the current vendor (authenticated user)
+  // Get all services (public endpoint for browsing)
+  app.get('/api/services', async (req, res, next) => {
+    try {
+      // Get all services from all vendors
+      // First get all vendors
+      const vendors = await storage.getAllVendors();
+      
+      // Then collect all services
+      let allServices = [];
+      for (const vendor of vendors) {
+        const services = await storage.getServicesByVendorId(vendor.id);
+        // Add vendor info to services
+        const servicesWithVendor = services.map(service => ({
+          ...service,
+          vendor: {
+            id: vendor.id,
+            businessName: vendor.businessName,
+            category: vendor.category,
+            rating: vendor.rating,
+            reviewCount: vendor.reviewCount,
+            user: {
+              name: vendor.user.name,
+              profileImage: vendor.user.profileImage
+            }
+          }
+        }));
+        
+        allServices = [...allServices, ...servicesWithVendor];
+      }
+      
+      res.json(allServices);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
   // Get services by vendor ID (public endpoint, no auth required)
   app.get('/api/services/vendor/:vendorId', async (req, res, next) => {
     try {
