@@ -2,8 +2,18 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    const contentType = res.headers.get('content-type');
+    
+    // Check if we're getting HTML instead of JSON
+    if (contentType && contentType.includes('text/html')) {
+      const htmlText = await res.text();
+      const preview = htmlText.substring(0, 150) + '...';
+      console.error('Received HTML instead of JSON:', preview);
+      throw new Error(`${res.status}: Received HTML instead of JSON response. The API endpoint may not exist.`);
+    } else {
+      const text = (await res.text()) || res.statusText;
+      throw new Error(`${res.status}: ${text}`);
+    }
   }
 }
 
@@ -98,7 +108,21 @@ export const getQueryFn: <T>(options: {
     }
 
     await throwIfResNotOk(res);
-    return await res.json();
+    
+    // Check if the response is empty before trying to parse JSON
+    const text = await res.text();
+    if (!text) {
+      console.log('Empty response received');
+      return {}; // Return empty object for empty responses
+    }
+    
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      console.error('Error parsing JSON response:', e);
+      console.error('Response text:', text.substring(0, 150) + '...');
+      throw new Error('Invalid JSON response from server');
+    }
   };
 
 export const queryClient = new QueryClient({

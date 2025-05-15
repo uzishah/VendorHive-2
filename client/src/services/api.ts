@@ -117,6 +117,16 @@ async function fetchWithErrorHandling(url: string, options: RequestInit = {}) {
     // Handle non-2xx responses
     if (!response.ok) {
       console.error(`API error: ${response.status} ${response.statusText}`);
+      
+      // Check content type to avoid trying to parse HTML as JSON
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('text/html')) {
+        // For HTML responses (like 404 pages), don't try to parse as JSON
+        const htmlText = await response.text();
+        console.error('Received HTML instead of JSON:', htmlText.substring(0, 150) + '...');
+        throw new Error(`Received HTML instead of JSON. Server returned ${response.status}: ${response.statusText}`);
+      }
+      
       const errorData = await response.json().catch(() => ({
         message: `HTTP error ${response.status}: ${response.statusText}`
       }));
@@ -126,7 +136,21 @@ async function fetchWithErrorHandling(url: string, options: RequestInit = {}) {
     
     // Parse JSON response
     console.log(`API request to ${url} successful`);
-    return await response.json();
+    
+    // Check if the response is empty before trying to parse JSON
+    const text = await response.text();
+    if (!text) {
+      console.log('Empty response received');
+      return {}; // Return empty object for empty responses
+    }
+    
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      console.error('Error parsing JSON response:', e);
+      console.error('Response text:', text.substring(0, 150) + '...');
+      throw new Error('Invalid JSON response from server');
+    }
   } catch (error) {
     console.error('API request failed:', error);
     // Rethrow with more context if it's a network error
