@@ -394,8 +394,11 @@ const VendorsPage: React.FC = () => {
                 <div className="h-48 w-full overflow-hidden">
                   <img 
                     className="w-full h-full object-cover" 
-                    src={`https://source.unsplash.com/featured/?${encodeURIComponent(vendor.category)}`} 
+                    src={vendor.coverImage ? vendor.coverImage : `https://source.unsplash.com/featured/?${encodeURIComponent(vendor.category)}`} 
                     alt={`${vendor.businessName} cover`}
+                    onError={(e) => {
+                      e.currentTarget.src = `https://source.unsplash.com/featured/?${encodeURIComponent(vendor.category)}`;
+                    }}
                   />
                 </div>
                 <CardContent className="p-6">
