@@ -8,6 +8,9 @@ console.log(`API Service using relative URLs`);
 
 export const API_BASE_URL = `/api`;
 
+// This variable can be toggled for debug mode
+const DEBUG_API = true;
+
 // Type definition for Service with Vendor information
 export interface ServiceWithVendor {
   id: number;
@@ -111,6 +114,18 @@ export const repairVendorProfile = async () => {
 // Generic fetch function with error handling
 async function fetchWithErrorHandling(url: string, options: RequestInit = {}) {
   try {
+    // Add Accept header to request JSON
+    const headers = options.headers || {};
+    if (!('Accept' in headers)) {
+      headers['Accept'] = 'application/json';
+    }
+    options.headers = headers;
+    
+    // Make sure URL is properly prefixed with /api
+    if (!url.startsWith('/api') && !url.startsWith('http')) {
+      url = `/api/${url}`;
+    }
+    
     console.log(`Making API request to: ${url}`);
     const response = await fetch(url, options);
     
@@ -124,14 +139,24 @@ async function fetchWithErrorHandling(url: string, options: RequestInit = {}) {
         // For HTML responses (like 404 pages), don't try to parse as JSON
         const htmlText = await response.text();
         console.error('Received HTML instead of JSON:', htmlText.substring(0, 150) + '...');
-        throw new Error(`Received HTML instead of JSON. Server returned ${response.status}: ${response.statusText}`);
+        
+        if (DEBUG_API) {
+          // In debug mode, extract more details about the error
+          const errorMatch = htmlText.match(/<pre>(.*?)<\/pre>/s);
+          const errorDetails = errorMatch ? errorMatch[1] : 'Unknown error';
+          throw new Error(`Received HTML instead of JSON: ${errorDetails}`);
+        } else {
+          throw new Error(`Received HTML instead of JSON. Server returned ${response.status}: ${response.statusText}`);
+        }
       }
       
-      const errorData = await response.json().catch(() => ({
-        message: `HTTP error ${response.status}: ${response.statusText}`
-      }));
-      
-      throw new Error(errorData.message || `HTTP error ${response.status}`);
+      try {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error ${response.status}`);
+      } catch (jsonError) {
+        // If we can't parse the error as JSON, use a generic error message
+        throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
+      }
     }
     
     // Parse JSON response
@@ -139,7 +164,7 @@ async function fetchWithErrorHandling(url: string, options: RequestInit = {}) {
     
     // Check if the response is empty before trying to parse JSON
     const text = await response.text();
-    if (!text) {
+    if (!text || text.trim() === '') {
       console.log('Empty response received');
       return {}; // Return empty object for empty responses
     }
@@ -148,8 +173,14 @@ async function fetchWithErrorHandling(url: string, options: RequestInit = {}) {
       return JSON.parse(text);
     } catch (e) {
       console.error('Error parsing JSON response:', e);
-      console.error('Response text:', text.substring(0, 150) + '...');
-      throw new Error('Invalid JSON response from server');
+      
+      if (text.includes('<!DOCTYPE html>')) {
+        console.error('Response text (HTML):', text.substring(0, 150) + '...');
+        throw new Error('Received HTML page instead of JSON. The API endpoint might not exist or is not returning valid JSON.');
+      } else {
+        console.error('Response text:', text.substring(0, 150) + '...');
+        throw new Error('Invalid JSON response from server');
+      }
     }
   } catch (error) {
     console.error('API request failed:', error);
