@@ -26,6 +26,18 @@ export interface ServiceWithVendor {
   availableDates?: Record<string, any>;
   availability: boolean;
   createdAt: Date;
+  // Support both naming conventions for vendor information
+  vendorInfo?: {
+    id: number;
+    businessName: string;
+    category: string;
+    rating: number;
+    reviewCount: number;
+    user?: {
+      name: string;
+      profileImage?: string;
+    };
+  };
   vendor?: {
     id: number;
     businessName: string;
