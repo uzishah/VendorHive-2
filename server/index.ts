@@ -23,6 +23,11 @@ app.use((req, res, next) => {
   const path = req.path;
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
+  // Force JSON content type for API routes with format=json query parameter
+  if (path.startsWith('/api') && req.query.format === 'json') {
+    res.setHeader('Content-Type', 'application/json');
+  }
+
   const originalResJson = res.json;
   res.json = function (bodyJson, ...args) {
     capturedJsonResponse = bodyJson;
@@ -59,6 +64,14 @@ app.use((req, res, next) => {
   }
   
   const server = await registerRoutes(app);
+  
+  // Add a 404 handler for API routes BEFORE setting up Vite
+  app.use('/api/*', (req, res) => {
+    res.status(404).json({ 
+      message: `API endpoint not found: ${req.originalUrl}`,
+      status: 404
+    });
+  });
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

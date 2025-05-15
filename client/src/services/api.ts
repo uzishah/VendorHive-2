@@ -116,10 +116,11 @@ async function fetchWithErrorHandling(url: string, options: RequestInit = {}) {
   try {
     // Add Accept header to request JSON
     const headers = options.headers || {};
-    if (!('Accept' in headers)) {
-      headers['Accept'] = 'application/json';
+    const headersObj = headers as Record<string, string>;
+    if (!('Accept' in headersObj)) {
+      headersObj['Accept'] = 'application/json';
     }
-    options.headers = headers;
+    options.headers = headersObj;
     
     // Make sure URL is properly prefixed with /api
     if (!url.startsWith('/api') && !url.startsWith('http')) {
@@ -142,7 +143,8 @@ async function fetchWithErrorHandling(url: string, options: RequestInit = {}) {
         
         if (DEBUG_API) {
           // In debug mode, extract more details about the error
-          const errorMatch = htmlText.match(/<pre>(.*?)<\/pre>/s);
+          // Using a simpler regex that works in ES2015
+          const errorMatch = htmlText.match(/<pre>([\s\S]*?)<\/pre>/);
           const errorDetails = errorMatch ? errorMatch[1] : 'Unknown error';
           throw new Error(`Received HTML instead of JSON: ${errorDetails}`);
         } else {

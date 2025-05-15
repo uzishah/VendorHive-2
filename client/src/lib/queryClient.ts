@@ -48,6 +48,13 @@ export async function apiRequest(
       fullUrl = `/api/${url}`;
     }
     
+    // Explicitly adding a query parameter to make sure we get JSON back
+    if (fullUrl.includes('?')) {
+      fullUrl += '&format=json';
+    } else {
+      fullUrl += '?format=json';
+    }
+    
     console.log(`Making API request to: ${fullUrl}`);
     
     const res = await fetch(fullUrl, {
@@ -98,7 +105,7 @@ export const getQueryFn: <T>(options: {
       console.log(`Query: ${queryKey[0]}`);
       console.log(`With token: ${token ? 'Yes' : 'No'}`);
       
-      // Use absolute path with the same origin but explicit API path
+      // Use URL directly if it starts with /api, otherwise prefix it
       const url = queryKey[0] as string;
       
       // Make sure we're using the API route prefixed with /api
@@ -108,6 +115,13 @@ export const getQueryFn: <T>(options: {
       }
       
       console.log(`Making query to: ${fullUrl}`);
+      
+      // Explicitly adding a query parameter to make sure we get JSON back
+      if (fullUrl.includes('?')) {
+        fullUrl += '&format=json';
+      } else {
+        fullUrl += '?format=json';
+      }
       
       const res = await fetch(fullUrl, {
         headers,
