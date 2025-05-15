@@ -43,6 +43,7 @@ const serviceSchema = z.object({
   price: z.string().min(1, "Price is required"),
   category: z.string().min(2, "Category is required"),
   duration: z.string().optional(),
+  imageUrl: z.string().optional(),
   availability: z.boolean().default(true),
 });
 
@@ -99,6 +100,7 @@ const DashboardPage: React.FC = () => {
       price: '',
       category: '',
       duration: '',
+      imageUrl: '',
       availability: true,
     },
   });
@@ -114,6 +116,57 @@ const DashboardPage: React.FC = () => {
   });
   
   // Create service mutation - moved before conditional returns
+  // State for image upload
+  const [uploading, setUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  
+  // Handle image upload
+  const handleImageUpload = async (file: File) => {
+    if (!file) return;
+    
+    try {
+      setUploading(true);
+      
+      // Create FormData
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      // Upload image
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+      
+      const data = await response.json();
+      
+      // Update form with image URL
+      serviceForm.setValue('imageUrl', data.imageUrl);
+      setImagePreview(data.imageUrl);
+      
+      toast({
+        title: 'Image uploaded successfully',
+        description: 'Your image has been uploaded.',
+      });
+      
+      return data.imageUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: 'Error uploading image',
+        description: 'Failed to upload image. Please try again.',
+        variant: 'destructive',
+      });
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const createServiceMutation = useMutation({
     mutationFn: (serviceData: z.infer<typeof serviceSchema>) => {
       return createService({
@@ -803,6 +856,66 @@ const DashboardPage: React.FC = () => {
                 )}
               />
               
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Service Image</Label>
+                  
+                  <div className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                    {uploading ? (
+                      <div className="flex flex-col items-center justify-center">
+                        <Loader2 className="h-10 w-10 animate-spin text-primary mb-2" />
+                        <p className="text-sm text-gray-500">Uploading...</p>
+                      </div>
+                    ) : imagePreview ? (
+                      <div className="relative w-full h-full">
+                        <img 
+                          src={imagePreview} 
+                          alt="Service preview" 
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded-lg">
+                          <p className="text-white text-sm">Click to change image</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-6">
+                        <ImagePlus className="h-12 w-12 text-gray-400 mb-2" />
+                        <p className="text-sm text-gray-500">Click to upload an image</p>
+                        <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 5MB</p>
+                      </div>
+                    )}
+                    
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      id="service-image" 
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          handleImageUpload(e.target.files[0]);
+                        }
+                      }}
+                      disabled={uploading}
+                    />
+                    <label htmlFor="service-image" className="absolute inset-0 cursor-pointer">
+                      <span className="sr-only">Upload service image</span>
+                    </label>
+                  </div>
+                </div>
+
+                <FormField
+                  control={serviceForm.control}
+                  name="imageUrl"
+                  render={({ field }) => (
+                    <FormItem className="hidden">
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <FormField
                 control={serviceForm.control}
                 name="availability"
