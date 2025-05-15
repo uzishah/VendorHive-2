@@ -418,20 +418,24 @@ function ServiceForm({
         
         <TabsContent value="image" className="space-y-4 pt-4">
           <div className="space-y-4">
-            <Label htmlFor="image">Service Image</Label>
+            <p className="text-sm font-medium">Service Image</p>
             
             <div className="flex items-center space-x-4">
               <div className="w-full">
                 <Input
                   type="file"
-                  id="image"
+                  id="service-image-upload"
                   accept="image/*"
-                  onChange={handleImageUpload}
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      handleImageUpload(e);
+                    }
+                  }}
                   disabled={uploading}
                   className="hidden"
                 />
-                <Label
-                  htmlFor="image"
+                <label
+                  htmlFor="service-image-upload"
                   className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-md cursor-pointer bg-gray-50 hover:bg-gray-100"
                 >
                   {uploading ? (
@@ -458,7 +462,7 @@ function ServiceForm({
                       </span>
                     </>
                   )}
-                </Label>
+                </label>
               </div>
               
               {formData.imageUrl && (
