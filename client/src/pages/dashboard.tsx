@@ -905,16 +905,29 @@ const DashboardPage: React.FC = () => {
                     <input 
                       type="file" 
                       className="hidden" 
-                      id="service-image" 
+                      id="dashboard-service-image" 
                       accept="image/*"
                       onChange={(e) => {
+                        // Only process if files exist and stop propagation to prevent bubbling
                         if (e.target.files && e.target.files[0]) {
+                          e.stopPropagation();
                           handleImageUpload(e.target.files[0]);
                         }
                       }}
+                      onClick={(e) => {
+                        // Prevent click from affecting other elements
+                        e.stopPropagation();
+                      }}
                       disabled={uploading}
                     />
-                    <label htmlFor="service-image" className="absolute inset-0 cursor-pointer">
+                    <label 
+                      htmlFor="dashboard-service-image" 
+                      className="absolute inset-0 cursor-pointer"
+                      onClick={(e) => {
+                        // Prevent the click from bubbling up
+                        e.stopPropagation();
+                      }}
+                    >
                       <span className="sr-only">Upload service image</span>
                     </label>
                   </div>

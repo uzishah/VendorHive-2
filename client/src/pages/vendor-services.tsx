@@ -127,7 +127,11 @@ function ServiceForm({
     });
   };
   
+  // Modified to prevent unexpected triggering
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Prevent event propagation to stop the dialog from opening unexpectedly
+    e.stopPropagation();
+    
     const file = e.target.files?.[0];
     if (!file) return;
     
@@ -427,16 +431,27 @@ function ServiceForm({
                   id="service-image-upload"
                   accept="image/*"
                   onChange={(e) => {
+                    // Only process the event if files exist
                     if (e.target.files && e.target.files[0]) {
+                      // Stop the event from bubbling up
+                      e.stopPropagation();
                       handleImageUpload(e);
                     }
                   }}
                   disabled={uploading}
                   className="hidden"
+                  onClick={(e) => {
+                    // Prevent click event from propagating to parent elements
+                    e.stopPropagation();
+                  }}
                 />
                 <label
                   htmlFor="service-image-upload"
                   className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-md cursor-pointer bg-gray-50 hover:bg-gray-100"
+                  onClick={(e) => {
+                    // Make sure this click event only triggers the file input and doesn't bubble up
+                    e.stopPropagation();
+                  }}
                 >
                   {uploading ? (
                     <div className="flex flex-col items-center">
