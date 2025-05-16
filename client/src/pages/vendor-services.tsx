@@ -144,9 +144,12 @@ function ServiceForm({
     });
   };
   
-  // Modified to prevent unexpected triggering
-  // Completely isolated image upload function to prevent interference with other form elements
-  const uploadServiceImage = () => {
+  // Image upload function - fixed to prevent unwanted triggering
+  const uploadServiceImage = (event: React.MouseEvent) => {
+    // Explicitly stop event propagation to prevent form interactions
+    event.stopPropagation();
+    event.preventDefault();
+    
     // Create a temporary file input element
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
@@ -487,7 +490,7 @@ function ServiceForm({
                     type="button"
                     variant="outline"
                     className="mt-2 w-full max-w-[200px]"
-                    onClick={() => uploadServiceImage()}
+                    onClick={(e) => uploadServiceImage(e)}
                   >
                     {formData.imageUrl ? 'Change Image' : 'Upload Image'}
                   </Button>
