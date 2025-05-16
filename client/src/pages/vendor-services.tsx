@@ -203,15 +203,15 @@ function ServiceForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-3 mb-2">
           <TabsTrigger value="basic">Basic Info</TabsTrigger>
           <TabsTrigger value="schedule">Schedule</TabsTrigger>
           <TabsTrigger value="image">Image</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="basic" className="space-y-4 pt-4">
+        <TabsContent value="basic" className="space-y-3 pt-2">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Service Name *</Label>
@@ -711,7 +711,7 @@ export default function VendorServicesPage() {
                 <Plus className="h-4 w-4 mr-2" /> Add New Service
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+            <DialogContent className="w-[95vw] sm:max-w-[500px] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
               <DialogHeader>
                 <DialogTitle>
                   {editingService ? 'Edit Service' : 'Add New Service'}
