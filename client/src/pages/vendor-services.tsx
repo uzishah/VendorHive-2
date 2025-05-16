@@ -326,10 +326,12 @@ function ServiceForm({
             />
           </div>
           
-          {/* Service Image Upload */}
-          <div className="space-y-1 mt-4">
-            <div className="flex justify-between items-center">
-              <Label className="text-sm">Service Image</Label>
+          {/* Service Image Upload - Simplified Button Only Approach */}
+          <div className="space-y-1 mt-4 border rounded-md p-4 bg-slate-50">
+            <div className="flex items-center justify-between mb-2">
+              <Label className="text-sm font-medium">Service Image</Label>
+              
+              {/* Only show upload button, no clickable areas that might trigger unexpectedly */}
               <Button 
                 type="button"
                 variant="outline"
@@ -342,18 +344,24 @@ function ServiceForm({
               </Button>
             </div>
             
-            {formData.imageUrl && (
-              <div className="mt-2 border rounded-md p-2 bg-slate-50">
+            {/* Image preview only shown when an image exists */}
+            {formData.imageUrl ? (
+              <div className="flex justify-center">
                 <img 
                   src={formData.imageUrl} 
                   alt="Service preview" 
-                  className="h-20 object-contain mx-auto" 
+                  className="h-32 object-contain border rounded-md" 
                 />
+              </div>
+            ) : (
+              <div className="text-center text-sm text-gray-500 py-2">
+                No image uploaded yet. Click the upload button to add an image.
               </div>
             )}
             
+            {/* Loading indicator while uploading */}
             {uploading && (
-              <div className="flex items-center justify-center py-2">
+              <div className="flex items-center justify-center py-2 bg-gray-100 rounded-md mt-2">
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 <span className="text-xs text-gray-500">Uploading image...</span>
               </div>
