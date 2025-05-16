@@ -12,7 +12,7 @@ npm run dev
 In this mode, the backend API runs on port 5000 and the frontend runs on port 3000. This is useful for development scenarios where you want to simulate a production-like environment with CORS.
 
 ```bash
-./run_separated.sh
+./run_separated_services.sh
 ```
 
 This will start:
@@ -30,8 +30,15 @@ If you need to run only one of the services:
 
 2. To run only the frontend:
 ```bash
-./run_frontend_dev.sh
+cd client && npx vite --port 3000 --host
 ```
+
+## Troubleshooting
+
+If you see "Cannot GET /" when accessing the frontend:
+1. Make sure the frontend server is running
+2. Check that you're using the correct port (3000 for frontend)
+3. The frontend needs to be accessed directly (http://localhost:3000) and not through the API server
 
 ## Implementation Details
 
