@@ -1,12 +1,11 @@
 // API service for communicating with the backend
 
 // Backend API URL
-// In Replit, the backend and frontend are served from the same origin
-// So we just use a relative URL
-const BACKEND_URL = '';
-console.log(`API Service using relative URLs`);
+// Using explicit backend URL since frontend and backend are now separate
+const BACKEND_URL = 'http://localhost:5000';
+console.log(`API Service using backend URL: ${BACKEND_URL}`);
 
-export const API_BASE_URL = `/api`;
+export const API_BASE_URL = `${BACKEND_URL}/api`;
 
 // This variable can be toggled for debug mode
 const DEBUG_API = true;
@@ -134,9 +133,15 @@ async function fetchWithErrorHandling(url: string, options: RequestInit = {}) {
     }
     options.headers = headersObj;
     
-    // Make sure URL is properly prefixed with /api
-    if (!url.startsWith('/api') && !url.startsWith('http')) {
-      url = `/api/${url}`;
+    // Make sure URL is properly formatted with the backend URL
+    if (!url.startsWith(BACKEND_URL) && !url.startsWith('http')) {
+      // If it starts with /api, add the backend URL
+      if (url.startsWith('/api')) {
+        url = `${BACKEND_URL}${url}`;
+      } else {
+        // Otherwise, add the full API base URL
+        url = `${API_BASE_URL}/${url}`;
+      }
     }
     
     console.log(`Making API request to: ${url}`);
