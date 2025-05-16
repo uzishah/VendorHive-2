@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Calendar } from '@/components/ui/calendar';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, Plus, Edit, Trash, ImagePlus } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { type Service } from '@/services/api';
@@ -297,7 +298,7 @@ function ServiceForm({
             />
           </div>
           
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 py-1">
             <input
               type="checkbox"
               id="availability"
@@ -305,14 +306,16 @@ function ServiceForm({
               onChange={(e) => setFormData((prev) => ({ ...prev, availability: e.target.checked }))}
               className="h-4 w-4 rounded border-gray-300"
             />
-            <Label htmlFor="availability">Service is currently available</Label>
+            <Label htmlFor="availability" className="text-sm">
+              Service is currently available
+            </Label>
           </div>
         </TabsContent>
         
-        <TabsContent value="schedule" className="space-y-6 pt-4">
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Time Slots</h3>
-            <p className="text-sm text-gray-500">Define when this service is available during the week</p>
+        <TabsContent value="schedule" className="space-y-3 pt-2">
+          <div className="space-y-2">
+            <h3 className="text-base font-medium">Time Slots</h3>
+            <p className="text-xs text-gray-500">Define when this service is available during the week</p>
             
             {formData.timeSlots.map((slot, index) => (
               <div key={index} className="grid grid-cols-7 gap-2 items-center bg-gray-50 p-3 rounded-md">
