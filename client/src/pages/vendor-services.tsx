@@ -429,86 +429,83 @@ function ServiceForm({
           </div>
         </TabsContent>
         
-        <TabsContent value="image" className="space-y-4 pt-4">
-          <div className="space-y-4">
+        <TabsContent value="image" className="space-y-2 pt-2">
+          <div className="space-y-2">
             <p className="text-sm font-medium">Service Image</p>
             
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-col sm:flex-row gap-3">
               <div className="w-full">
-                <input
-                  type="file"
-                  id="vendor-service-image-final"
-                  accept="image/*"
-                  onChange={(e) => {
-                    // Only process the event if files exist
-                    if (e.target.files && e.target.files[0]) {
-                      // Stop the event from bubbling up
-                      e.stopPropagation();
-                      handleImageUpload(e);
-                    }
-                  }}
-                  disabled={uploading}
-                  className="hidden"
-                  onClick={(e) => {
-                    // Prevent click event from propagating to parent elements
-                    e.stopPropagation();
-                  }}
-                />
-                <label
-                  htmlFor="vendor-service-image-final"
-                  className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed rounded-md cursor-pointer bg-gray-50 hover:bg-gray-100"
-                  onClick={(e) => {
-                    // Make sure this click event only triggers the file input and doesn't bubble up
-                    e.stopPropagation();
-                  }}
-                >
-                  {uploading ? (
-                    <div className="flex flex-col items-center">
-                      <Loader2 className="h-6 w-6 animate-spin mb-2" />
-                      <span className="text-sm text-gray-500">Uploading...</span>
-                    </div>
-                  ) : formData.imageUrl ? (
-                    <div className="flex flex-col items-center">
-                      <img 
-                        src={formData.imageUrl} 
-                        alt="Preview" 
-                        className="h-14 w-14 object-cover mb-1" 
-                      />
-                      <span className="text-xs text-gray-500">
-                        Click to change image
-                      </span>
-                    </div>
-                  ) : (
-                    <>
-                      <ImagePlus className="h-6 w-6 text-gray-400" />
-                      <span className="mt-1 text-xs text-gray-500">
-                        Click to upload an image
-                      </span>
-                    </>
-                  )}
-                </label>
+                <div className="relative border-2 border-dashed rounded-md p-3 text-center bg-gray-50">
+                  <div className="space-y-1" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="file"
+                      id="imageUploader1012"
+                      accept="image/*"
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        if (e.target.files && e.target.files[0]) {
+                          handleImageUpload(e);
+                        }
+                      }}
+                      disabled={uploading}
+                      className="hidden"
+                    />
+                    
+                    {uploading ? (
+                      <div className="text-center py-2">
+                        <Loader2 className="h-5 w-5 animate-spin mx-auto mb-1" />
+                        <p className="text-xs text-gray-500">Uploading...</p>
+                      </div>
+                    ) : formData.imageUrl ? (
+                      <div className="text-center py-1">
+                        <img 
+                          src={formData.imageUrl} 
+                          alt="Preview" 
+                          className="h-14 w-14 object-cover mx-auto mb-1 rounded-sm" 
+                        />
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm" 
+                          className="mt-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            document.getElementById('imageUploader1012')?.click();
+                          }}
+                        >
+                          Change Image
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="text-center py-3">
+                        <ImagePlus className="h-5 w-5 text-gray-400 mx-auto mb-1" />
+                        <p className="text-xs text-gray-500 mb-1">Upload an image for your service</p>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            document.getElementById('imageUploader1012')?.click();
+                          }}
+                        >
+                          Select Image
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
               
-              {formData.imageUrl && (
-                <div className="w-32 h-32 rounded-md overflow-hidden border">
-                  <img
-                    src={formData.imageUrl}
-                    alt="Service preview"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
+              {/* Image preview is now included in the upload area */}
             </div>
             
-            {formData.imageUrl && (
-              <Input
-                type="text"
-                value={formData.imageUrl}
-                onChange={(e) => setFormData((prev) => ({ ...prev, imageUrl: e.target.value }))}
-                placeholder="Image URL"
-                className="mt-2"
-              />
-            )}
+            {/* Hidden field to store the image URL */}
+            <input
+              type="hidden"
+              value={formData.imageUrl || ''}
+              onChange={(e) => setFormData((prev) => ({ ...prev, imageUrl: e.target.value }))}
+            />
           </div>
         </TabsContent>
       </Tabs>
@@ -720,7 +717,7 @@ export default function VendorServicesPage() {
                 <Plus className="h-4 w-4 mr-2" /> Add New Service
               </Button>
             </DialogTrigger>
-            <DialogContent className="w-full max-w-[500px] max-h-[90vh] overflow-y-auto p-4 sm:p-6 fixed inset-0 m-auto">
+            <DialogContent className="md:w-[550px] w-[90%] h-[80vh] overflow-y-auto p-4 sm:p-6">
               <DialogHeader>
                 <DialogTitle>
                   {editingService ? 'Edit Service' : 'Add New Service'}
