@@ -877,28 +877,42 @@ const DashboardPage: React.FC = () => {
                 <div className="space-y-2">
                   <Label>Service Image</Label>
                   
-                  <div className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                    {uploading ? (
-                      <div className="flex flex-col items-center justify-center">
-                        <Loader2 className="h-10 w-10 animate-spin text-primary mb-2" />
-                        <p className="text-sm text-gray-500">Uploading...</p>
-                      </div>
-                    ) : imagePreview ? (
-                      <div className="relative w-full h-full">
+                  <div className="border rounded-md p-4 bg-slate-50">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium">Upload service photo</span>
+                      <Button 
+                        type="button" 
+                        size="sm" 
+                        variant="outline"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          document.getElementById('dashboard-service-image')?.click();
+                        }}
+                        disabled={uploading}
+                      >
+                        <ImagePlus className="h-4 w-4 mr-2" />
+                        {imagePreview ? 'Change Image' : 'Upload Image'}
+                      </Button>
+                    </div>
+                    
+                    {imagePreview ? (
+                      <div className="mt-2">
                         <img 
                           src={imagePreview} 
                           alt="Service preview" 
-                          className="w-full h-full object-cover rounded-lg"
+                          className="mx-auto h-32 object-contain rounded-md" 
                         />
-                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded-lg">
-                          <p className="text-white text-sm">Click to change image</p>
-                        </div>
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center justify-center py-6">
-                        <ImagePlus className="h-12 w-12 text-gray-400 mb-2" />
-                        <p className="text-sm text-gray-500">Click to upload an image</p>
-                        <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 5MB</p>
+                      <div className="text-center text-sm text-gray-500 py-2">
+                        No image uploaded yet. Click the upload button to add an image.
+                      </div>
+                    )}
+                    
+                    {uploading && (
+                      <div className="flex items-center justify-center p-2 mt-2 bg-gray-100 rounded-md">
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        <span className="text-xs text-gray-500">Uploading image...</span>
                       </div>
                     )}
                     
@@ -908,28 +922,12 @@ const DashboardPage: React.FC = () => {
                       id="dashboard-service-image" 
                       accept="image/*"
                       onChange={(e) => {
-                        // Only process if files exist and stop propagation to prevent bubbling
                         if (e.target.files && e.target.files[0]) {
-                          e.stopPropagation();
                           handleImageUpload(e.target.files[0]);
                         }
                       }}
-                      onClick={(e) => {
-                        // Prevent click from affecting other elements
-                        e.stopPropagation();
-                      }}
                       disabled={uploading}
                     />
-                    <label 
-                      htmlFor="dashboard-service-image" 
-                      className="absolute inset-0 cursor-pointer"
-                      onClick={(e) => {
-                        // Prevent the click from bubbling up
-                        e.stopPropagation();
-                      }}
-                    >
-                      <span className="sr-only">Upload service image</span>
-                    </label>
                   </div>
                 </div>
 
