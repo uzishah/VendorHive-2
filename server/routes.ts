@@ -599,6 +599,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // General image upload endpoint for any authenticated user
+  app.post('/api/upload', authenticateToken, upload.single('image'), async (req, res, next) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+      }
+      
+      // Use the helper function to upload to Cloudinary
+      const imageUrl = await uploadImage(req.file);
+      
+      if (!imageUrl) {
+        return res.status(500).json({ message: 'Failed to upload image' });
+      }
+      
+      console.log('Image uploaded successfully to Cloudinary:', imageUrl);
+      res.json({ imageUrl });
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      next(error);
+    }
+  });
+
   // Vendor cover image upload route
   app.post('/api/vendors/cover-image', authenticateToken, authorizeRole(['vendor']), upload.single('coverImage'), async (req, res, next) => {
     try {

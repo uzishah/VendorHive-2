@@ -487,11 +487,7 @@ function ServiceForm({
                     type="button"
                     variant="outline"
                     className="mt-2 w-full max-w-[200px]"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      uploadServiceImage();
-                    }}
+                    onClick={() => uploadServiceImage()}
                   >
                     {formData.imageUrl ? 'Change Image' : 'Upload Image'}
                   </Button>
