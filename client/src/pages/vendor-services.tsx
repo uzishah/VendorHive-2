@@ -17,7 +17,23 @@ import { Calendar } from '@/components/ui/calendar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, Plus, Edit, Trash, ImagePlus } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
-import { type Service } from '@/services/api';
+
+// Define the Service type interface locally
+interface Service {
+  id: number;
+  vendorId: number;
+  name: string;
+  category: string;
+  description: string;
+  price: string;
+  duration: string;
+  location: string;
+  imageUrl: string;
+  timeSlots: { day: string; startTime: string; endTime: string }[];
+  availableDates: Date[];
+  availability: boolean;
+  createdAt: Date;
+}
 
 const SERVICE_CATEGORIES = [
   "Cleaning",
@@ -129,49 +145,59 @@ function ServiceForm({
   };
   
   // Modified to prevent unexpected triggering
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Prevent event propagation to stop the dialog from opening unexpectedly
-    e.stopPropagation();
+  // Completely isolated image upload function to prevent interference with other form elements
+  const uploadServiceImage = () => {
+    // Create a temporary file input element
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
     
-    const file = e.target.files?.[0];
-    if (!file) return;
+    // Add click handler and then remove it after use
+    fileInput.onchange = async (e) => {
+      const target = e.target as HTMLInputElement;
+      const file = target.files?.[0];
+      if (!file) return;
     
-    try {
-      setUploading(true);
-      
-      const formData = new FormData();
-      formData.append('image', file);
-      
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        headers: {
-          // Include the auth token for authentication
-          'Authorization': `Bearer ${authToken}`
-        },
-        body: formData,
-        credentials: 'include'
-        // No Content-Type header, let the browser set it with the boundary
-      });
-      
-      if (response.ok) {
-        const { imageUrl } = await response.json();
-        setFormData((prev) => ({ ...prev, imageUrl }));
-        toast({
-          title: 'Success',
-          description: 'Image uploaded successfully',
+      try {
+        setUploading(true);
+        
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          headers: {
+            // Include the auth token for authentication
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: formData,
+          credentials: 'include'
+          // No Content-Type header, let the browser set it with the boundary
         });
-      } else {
-        throw new Error('Failed to upload image');
+      
+        if (response.ok) {
+          const { imageUrl } = await response.json();
+          setFormData((prev) => ({ ...prev, imageUrl }));
+          toast({
+            title: 'Success',
+            description: 'Image uploaded successfully',
+          });
+        } else {
+          throw new Error('Failed to upload image');
+        }
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description: 'Failed to upload image. Please try again.',
+          variant: 'destructive',
+        });
+      } finally {
+        setUploading(false);
       }
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to upload image. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setUploading(false);
-    }
+    };
+    
+    // Trigger the file dialog
+    fileInput.click();
   };
   
   const handleDateSelect = (date: Date | undefined) => {
@@ -430,76 +456,49 @@ function ServiceForm({
         </TabsContent>
         
         <TabsContent value="image" className="space-y-2 pt-2">
-          <div className="space-y-2">
+          <div className="space-y-3">
             <p className="text-sm font-medium">Service Image</p>
             
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="w-full">
-                <div className="relative border-2 border-dashed rounded-md p-3 text-center bg-gray-50">
-                  <div className="space-y-1" onClick={(e) => e.stopPropagation()}>
-                    <input
-                      type="file"
-                      id="imageUploader1012"
-                      accept="image/*"
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        if (e.target.files && e.target.files[0]) {
-                          handleImageUpload(e);
-                        }
-                      }}
-                      disabled={uploading}
-                      className="hidden"
-                    />
-                    
-                    {uploading ? (
-                      <div className="text-center py-2">
-                        <Loader2 className="h-5 w-5 animate-spin mx-auto mb-1" />
-                        <p className="text-xs text-gray-500">Uploading...</p>
-                      </div>
-                    ) : formData.imageUrl ? (
-                      <div className="text-center py-1">
-                        <img 
-                          src={formData.imageUrl} 
-                          alt="Preview" 
-                          className="h-14 w-14 object-cover mx-auto mb-1 rounded-sm" 
-                        />
-                        <Button 
-                          type="button" 
-                          variant="outline" 
-                          size="sm" 
-                          className="mt-1"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            document.getElementById('imageUploader1012')?.click();
-                          }}
-                        >
-                          Change Image
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="text-center py-3">
-                        <ImagePlus className="h-5 w-5 text-gray-400 mx-auto mb-1" />
-                        <p className="text-xs text-gray-500 mb-1">Upload an image for your service</p>
-                        <Button 
-                          type="button" 
-                          variant="outline" 
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            document.getElementById('imageUploader1012')?.click();
-                          }}
-                        >
-                          Select Image
-                        </Button>
-                      </div>
-                    )}
-                  </div>
+            <div className="flex flex-col items-center p-4 border rounded-md bg-slate-50">
+              {uploading ? (
+                <div className="py-4 text-center">
+                  <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">Uploading image...</p>
                 </div>
-              </div>
-              
-              {/* Image preview is now included in the upload area */}
+              ) : (
+                <>
+                  {formData.imageUrl ? (
+                    <div className="text-center mb-3">
+                      <img 
+                        src={formData.imageUrl} 
+                        alt="Service preview" 
+                        className="h-32 w-32 object-cover mx-auto mb-3 border rounded-md" 
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-center mb-3">
+                      <div className="h-32 w-32 mx-auto border border-dashed rounded-md flex items-center justify-center bg-gray-100">
+                        <ImagePlus className="h-8 w-8 text-gray-400" />
+                      </div>
+                    </div>
+                  )}
+                  
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    className="mt-2 w-full max-w-[200px]"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      uploadServiceImage();
+                    }}
+                  >
+                    {formData.imageUrl ? 'Change Image' : 'Upload Image'}
+                  </Button>
+                </>
+              )}
             </div>
-            
+
             {/* Hidden field to store the image URL */}
             <input
               type="hidden"
