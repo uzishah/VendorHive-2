@@ -1,9 +1,21 @@
 // API service for communicating with the backend
 
-// Backend API URL
-// Using explicit backend URL since frontend and backend are now separate
-const BACKEND_URL = 'http://localhost:5000';
-console.log(`API Service using backend URL: ${BACKEND_URL}`);
+// Determine API base URL dynamically based on environment
+// In development with separated services: use explicit backend URL
+// In production or integrated mode: use relative URL
+const isProduction = process.env.NODE_ENV === 'production';
+const isReplit = typeof window !== 'undefined' && window.location.hostname.includes('.replit.app');
+
+// Default to relative URL which works in integrated mode
+let BACKEND_URL = '';
+
+// Only use absolute URL when explicitly running in development mode with separated services
+// and not running in the Replit environment
+if (!isProduction && !isReplit && typeof window !== 'undefined' && window.location.port === '3000') {
+  BACKEND_URL = 'http://localhost:5000';
+}
+
+console.log(`API Service using backend URL: ${BACKEND_URL || 'relative URL'}`);
 
 export const API_BASE_URL = `${BACKEND_URL}/api`;
 

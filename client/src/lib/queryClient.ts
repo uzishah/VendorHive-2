@@ -1,5 +1,20 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+// Determine API base URL dynamically based on environment
+// In development with separated services: use explicit backend URL
+// In production or integrated mode: use relative URL
+const isProduction = process.env.NODE_ENV === 'production';
+const isReplit = typeof window !== 'undefined' && window.location.hostname.includes('.replit.app');
+
+// Default to relative URL which works in integrated mode
+let BACKEND_URL = '';
+
+// Only use absolute URL when explicitly running in development mode with separated services
+// and not running in the Replit environment
+if (!isProduction && !isReplit && typeof window !== 'undefined' && window.location.port === '3000') {
+  BACKEND_URL = 'http://localhost:5000';
+}
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const contentType = res.headers.get('content-type');
@@ -46,6 +61,11 @@ export async function apiRequest(
     let fullUrl = url;
     if (!url.startsWith('/api') && !url.startsWith('http')) {
       fullUrl = `/api/${url}`;
+    }
+    
+    // For separated mode in development, prefix with BACKEND_URL
+    if (BACKEND_URL && !fullUrl.startsWith('http')) {
+      fullUrl = `${BACKEND_URL}${fullUrl}`;
     }
     
     // Explicitly adding a query parameter to make sure we get JSON back
@@ -112,6 +132,11 @@ export const getQueryFn: <T>(options: {
       let fullUrl = url;
       if (!url.startsWith('/api') && !url.startsWith('http')) {
         fullUrl = `/api/${url}`;
+      }
+      
+      // For separated mode in development, prefix with BACKEND_URL
+      if (BACKEND_URL && !fullUrl.startsWith('http')) {
+        fullUrl = `${BACKEND_URL}${fullUrl}`;
       }
       
       console.log(`Making query to: ${fullUrl}`);
