@@ -212,26 +212,27 @@ function ServiceForm({
         </TabsList>
         
         <TabsContent value="basic" className="space-y-3 pt-2">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Service Name *</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="name" className="text-sm">Service Name *</Label>
               <Input
                 id="name"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
                 required
+                className="h-9"
               />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="category">Category *</Label>
+            <div className="space-y-1">
+              <Label htmlFor="category" className="text-sm">Category *</Label>
               <Select
                 value={formData.category}
                 onValueChange={(value) => handleSelectChange('category', value)}
                 required
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-9">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -245,21 +246,22 @@ function ServiceForm({
             </div>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="description">Description *</Label>
+          <div className="space-y-1">
+            <Label htmlFor="description" className="text-sm">Description *</Label>
             <Textarea
               id="description"
               name="description"
               value={formData.description}
               onChange={handleInputChange}
-              rows={4}
+              rows={3}
               required
+              className="resize-none"
             />
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="price">Price *</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="price" className="text-sm">Price *</Label>
               <Input
                 id="price"
                 name="price"
@@ -267,11 +269,12 @@ function ServiceForm({
                 onChange={handleInputChange}
                 placeholder="$50/hour"
                 required
+                className="h-9"
               />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="duration">Duration</Label>
+            <div className="space-y-1">
+              <Label htmlFor="duration" className="text-sm">Duration</Label>
               <Input
                 id="duration"
                 name="duration"
@@ -282,14 +285,15 @@ function ServiceForm({
             </div>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="location">Location</Label>
+          <div className="space-y-1">
+            <Label htmlFor="location" className="text-sm">Location</Label>
             <Input
               id="location"
               name="location"
               value={formData.location}
               onChange={handleInputChange}
               placeholder="Service address or 'Remote'"
+              className="h-9"
             />
           </div>
           
