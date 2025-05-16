@@ -1,6 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { log } from "./vite";
+import { setupVite, serveStatic, log } from "./vite";
 import { connectMongoose } from "./db";
 import dotenv from 'dotenv';
 import cors from 'cors';
@@ -12,16 +12,10 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Configure CORS specifically for frontend origins
-const allowedOrigins = ['http://localhost:3000'];
-log(`CORS enabled for origins: ${allowedOrigins.join(', ')}`);
-
+// Configure CORS for all origins during development
 app.use(cors({
-  origin: allowedOrigins,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true, // Allow cookies and authentication headers
-  optionsSuccessStatus: 204
+  origin: true, // This allows all origins
+  credentials: true // Allow cookies and authentication headers
 }));
 
 app.use((req, res, next) => {
@@ -71,7 +65,7 @@ app.use((req, res, next) => {
   
   const server = await registerRoutes(app);
   
-  // Add a 404 handler for API routes
+  // Add a 404 handler for API routes BEFORE setting up Vite
   app.use('/api/*', (req, res) => {
     res.status(404).json({ 
       message: `API endpoint not found: ${req.originalUrl}`,
@@ -79,14 +73,22 @@ app.use((req, res, next) => {
     });
   });
 
-  // Global error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
     res.status(status).json({ message });
-    log(`Error: ${message}`);
+    throw err;
   });
+
+  // importantly only setup vite in development and after
+  // setting up all the other routes so the catch-all route
+  // doesn't interfere with the other routes
+  if (app.get("env") === "development") {
+    await setupVite(app, server);
+  } else {
+    serveStatic(app);
+  }
 
   // Serve the API on port 5000
   // The frontend will be served separately on port 3000
