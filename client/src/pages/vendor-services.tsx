@@ -235,10 +235,9 @@ function ServiceForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-2">
+        <TabsList className="grid w-full grid-cols-2 mb-2">
           <TabsTrigger value="basic">Basic Info</TabsTrigger>
           <TabsTrigger value="schedule">Schedule</TabsTrigger>
-          <TabsTrigger value="image">Image</TabsTrigger>
         </TabsList>
         
         <TabsContent value="basic" className="space-y-3 pt-2">
@@ -325,6 +324,40 @@ function ServiceForm({
               placeholder="Service address or 'Remote'"
               className="h-9"
             />
+          </div>
+          
+          {/* Service Image Upload */}
+          <div className="space-y-1 mt-4">
+            <div className="flex justify-between items-center">
+              <Label className="text-sm">Service Image</Label>
+              <Button 
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={(e) => uploadServiceImage(e)}
+                className="h-8"
+              >
+                <ImagePlus className="h-4 w-4 mr-2" />
+                {formData.imageUrl ? 'Change Image' : 'Upload Image'}
+              </Button>
+            </div>
+            
+            {formData.imageUrl && (
+              <div className="mt-2 border rounded-md p-2 bg-slate-50">
+                <img 
+                  src={formData.imageUrl} 
+                  alt="Service preview" 
+                  className="h-20 object-contain mx-auto" 
+                />
+              </div>
+            )}
+            
+            {uploading && (
+              <div className="flex items-center justify-center py-2">
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <span className="text-xs text-gray-500">Uploading image...</span>
+              </div>
+            )}
           </div>
           
           <div className="flex items-center space-x-2 py-1">
@@ -458,54 +491,12 @@ function ServiceForm({
           </div>
         </TabsContent>
         
-        <TabsContent value="image" className="space-y-2 pt-2">
-          <div className="space-y-3">
-            <p className="text-sm font-medium">Service Image</p>
-            
-            <div className="flex flex-col items-center p-4 border rounded-md bg-slate-50">
-              {uploading ? (
-                <div className="py-4 text-center">
-                  <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
-                  <p className="text-sm text-gray-500">Uploading image...</p>
-                </div>
-              ) : (
-                <>
-                  {formData.imageUrl ? (
-                    <div className="text-center mb-3">
-                      <img 
-                        src={formData.imageUrl} 
-                        alt="Service preview" 
-                        className="h-32 w-32 object-cover mx-auto mb-3 border rounded-md" 
-                      />
-                    </div>
-                  ) : (
-                    <div className="text-center mb-3">
-                      <div className="h-32 w-32 mx-auto border border-dashed rounded-md flex items-center justify-center bg-gray-100">
-                        <ImagePlus className="h-8 w-8 text-gray-400" />
-                      </div>
-                    </div>
-                  )}
-                  
-                  <Button 
-                    type="button"
-                    variant="outline"
-                    className="mt-2 w-full max-w-[200px]"
-                    onClick={(e) => uploadServiceImage(e)}
-                  >
-                    {formData.imageUrl ? 'Change Image' : 'Upload Image'}
-                  </Button>
-                </>
-              )}
-            </div>
-
-            {/* Hidden field to store the image URL */}
-            <input
-              type="hidden"
-              value={formData.imageUrl || ''}
-              onChange={(e) => setFormData((prev) => ({ ...prev, imageUrl: e.target.value }))}
-            />
-          </div>
-        </TabsContent>
+        {/* Hidden field to store the image URL */}
+        <input
+          type="hidden"
+          value={formData.imageUrl || ''}
+          onChange={(e) => setFormData((prev) => ({ ...prev, imageUrl: e.target.value }))}
+        />
       </Tabs>
       
       <DialogFooter>
