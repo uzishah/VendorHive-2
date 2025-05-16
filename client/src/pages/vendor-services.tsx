@@ -299,14 +299,16 @@ function ServiceForm({
           </div>
           
           <div className="flex items-center space-x-2 py-1">
-            <input
-              type="checkbox"
-              id="availability"
-              checked={formData.availability}
-              onChange={(e) => setFormData((prev) => ({ ...prev, availability: e.target.checked }))}
-              className="h-4 w-4 rounded border-gray-300"
-            />
-            <Label htmlFor="availability" className="text-sm">
+            <div className="flex-shrink-0">
+              <input
+                type="checkbox"
+                id="service-availability-checkbox"
+                checked={formData.availability}
+                onChange={(e) => setFormData((prev) => ({ ...prev, availability: e.target.checked }))}
+                className="h-4 w-4 rounded border-gray-300"
+              />
+            </div>
+            <Label htmlFor="service-availability-checkbox" className="text-sm">
               Service is currently available
             </Label>
           </div>
@@ -433,9 +435,9 @@ function ServiceForm({
             
             <div className="flex items-center space-x-4">
               <div className="w-full">
-                <Input
+                <input
                   type="file"
-                  id="service-image-upload"
+                  id="vendor-service-image-final"
                   accept="image/*"
                   onChange={(e) => {
                     // Only process the event if files exist
@@ -453,8 +455,8 @@ function ServiceForm({
                   }}
                 />
                 <label
-                  htmlFor="service-image-upload"
-                  className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-md cursor-pointer bg-gray-50 hover:bg-gray-100"
+                  htmlFor="vendor-service-image-final"
+                  className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed rounded-md cursor-pointer bg-gray-50 hover:bg-gray-100"
                   onClick={(e) => {
                     // Make sure this click event only triggers the file input and doesn't bubble up
                     e.stopPropagation();
@@ -470,16 +472,16 @@ function ServiceForm({
                       <img 
                         src={formData.imageUrl} 
                         alt="Preview" 
-                        className="h-16 w-16 object-cover mb-2" 
+                        className="h-14 w-14 object-cover mb-1" 
                       />
-                      <span className="text-sm text-gray-500">
+                      <span className="text-xs text-gray-500">
                         Click to change image
                       </span>
                     </div>
                   ) : (
                     <>
-                      <ImagePlus className="h-8 w-8 text-gray-400" />
-                      <span className="mt-2 text-sm text-gray-500">
+                      <ImagePlus className="h-6 w-6 text-gray-400" />
+                      <span className="mt-1 text-xs text-gray-500">
                         Click to upload an image
                       </span>
                     </>
@@ -718,7 +720,7 @@ export default function VendorServicesPage() {
                 <Plus className="h-4 w-4 mr-2" /> Add New Service
               </Button>
             </DialogTrigger>
-            <DialogContent className="w-[95vw] sm:max-w-[500px] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+            <DialogContent className="w-full max-w-[500px] max-h-[90vh] overflow-y-auto p-4 sm:p-6 fixed inset-0 m-auto">
               <DialogHeader>
                 <DialogTitle>
                   {editingService ? 'Edit Service' : 'Add New Service'}
